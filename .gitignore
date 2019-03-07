@@ -1,7 +1,7 @@
 #Eclipse files
-/.settings/*
-.cproject
-.project
+#/.settings/*
+#.cproject
+#.project
 # Build files
 /Debug/*
 /Release/*
