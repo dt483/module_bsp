@@ -56,7 +56,7 @@ typedef enum {
 typedef enum {
 	ARMSC_LOW_PRIORITY_INT = 0,
 	ARMSC_HIGH_PRIORITY_INT = 2 ,
-	ARMSC_NONMASCABLE_INT = 4
+	ARMSC_NONMASKABLE_INT = 4
 }  module_ARMSC_typeInt_t;
 
 /*Function protorypes*/

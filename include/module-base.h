@@ -24,13 +24,14 @@
 
 #define PERIPHERAL_LENGTH 	( 0x3FFFFUL    )
 
-	/*Memory macro defs*/
+	/*Memory macro defs for 8-bit ARM-adressing */
 #define AMB0_0_START_ADDR	( 0x0UL )
 #define AMB0_0_LENGTH		( 0x3FFFFUL    )
 #define AMB0_START_ADDR		( 0xC0000000UL )
 #define AMB0_LENGTH			( 0x3FFFFUL    )
 #define AMB1_START_ADDR		( 0xC0040000UL )
 #define AMB1_LENGTH			( 0x3FFFFUL    )
+#define AMB_LENGTH			( 0x7FFFFUL    )
 
 #define SMB0_START_ADDR		( 0x00100000UL )
 #define SMB0_LENGTH			( 0x1FFFFUL    )
@@ -40,15 +41,68 @@
 #define SMB2_LENGTH			( 0x1FFFFUL    )
 #define SMB3_START_ADDR		( 0x00160000UL )
 #define SMB3_LENGTH			( 0x1FFFFUL    )
+#define SMB_LENGTH			( 0x7FFFFUL    )
 
 #define NM1B0_START_ADDR	( 0x00200000UL )
+#define NM1B0_LENGTH		( 0x1FFFFUL    )
+#define NM1B1_START_ADDR	( 0x00220000UL )
 #define NM1B1_LENGTH		( 0x1FFFFUL    )
-#define NM1B2_START_ADDR	( 0x00220000UL )
+#define NM1B2_START_ADDR	( 0x00240000UL )
+#define NM1B2_LENGTH		( 0x1FFFFUL    )
+#define NM1B3_START_ADDR	( 0x00260000UL )
 #define NM1B3_LENGTH		( 0x1FFFFUL    )
-#define NM2B0_START_ADDR	( 0x00240000UL )
+#define NM1_LENGTH			( 0x7FFFFUL    )
+
+#define NM2B0_START_ADDR	( 0x00280000UL )
+#define NM2B0_LENGTH		( 0x1FFFFUL    )
+#define NM2B1_START_ADDR	( 0x002A0000UL )
 #define NM2B1_LENGTH		( 0x1FFFFUL    )
-#define NM2B2_START_ADDR	( 0x00260000UL )
+#define NM2B2_START_ADDR	( 0x002C0000UL )
+#define NM2B2_LENGTH		( 0x1FFFFUL    )
+#define NM2B3_START_ADDR	( 0x002E0000UL )
 #define NM2B3_LENGTH		( 0x1FFFFUL    )
+#define NM2_LENGTH			( 0x7FFFFUL    )
+
+	/*Memory macro defs for 32-bit NMC-adressing */
+#define AMB0_START_ADDR_32_BIT		( 0x30000000UL )
+#define AMB0_LENGTH_32_BIT			( 0xFFFFUL    )
+#define AMB1_START_ADDR_32_BIT		( 0x3001000UL )
+#define AMB1_LENGTH_32_BIT			( 0xFFFFUL    )
+#define AMB_LENGTH_32_BIT			( 0x1FFFFUL    )
+
+#define SMB0_START_ADDR_32_BIT		( 0x40000UL   )
+#define SMB0_LENGTH_32_BIT			( 0x7FFFUL    )
+#define SMB1_START_ADDR_32_BIT		( 0x48000UL   )
+#define SMB1_LENGTH_32_BIT			( 0x7FFFUL    )
+#define SMB2_START_ADDR_32_BIT		( 0x50000UL   )
+#define SMB2_LENGTH_32_BIT			( 0x7FFFUL    )
+#define SMB3_START_ADDR_32_BIT		( 0x58000UL   )
+#define SMB3_LENGTH_32_BIT			( 0x7FFFUL    )
+#define SMB_LENGTH_32_BIT			( 0x5FFFFUL   )
+
+#define NMX_START_ADDR_32_BIT	( 0x00000000UL ) //access for mirrored NMx bank to 0x0
+#define NMX_LENGTH_32_BIT		( 0x1FFFFUL    )
+
+#define NM1B0_START_ADDR_32_BIT	(0x80000UL  )
+#define NM1B0_LENGTH_32_BIT		( 0x7FFFUL    )
+#define NM1B1_START_ADDR_32_BIT	( 0x88000UL )
+#define NM1B1_LENGTH_32_BIT		( 0x7FFFUL    )
+#define NM1B2_START_ADDR_32_BIT	( 0x90000UL )
+#define NM1B2_LENGTH_32_BIT		( 0x7FFFUL    )
+#define NM1B3_START_ADDR_32_BIT	( 0x98000UL )
+#define NM1B3_LENGTH_32_BIT		( 0x7FFFUL    )
+#define NM1_LENGTH_32_BIT			( 0x1FFFFUL    )
+
+#define NM2B0_START_ADDR_32_BIT	( 0xA0000UL )
+#define NM2B0_LENGTH_32_BIT		( 0x7FFFUL    )
+#define NM2B1_START_ADDR_32_BIT	( 0xA8000UL )
+#define NM2B1_LENGTH_32_BIT		( 0x7FFFUL    )
+#define NM2B2_START_ADDR_32_BIT	( 0xB0000UL )
+#define NM2B2_LENGTH_32_BIT		( 0x7FFFUL    )
+#define NM2B3_START_ADDR_32_BIT	( 0xB8000UL )
+#define NM2B3_LENGTH_32_BIT		( 0x7FFFUL    )
+#define NM2_LENGTH_32_BIT		( 0x1FFFFUL    )
+
 
 	/* Defining active UART console number */
 #define UART_CONSOLE UART_0
