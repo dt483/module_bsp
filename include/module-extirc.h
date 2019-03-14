@@ -5,8 +5,8 @@
  *      Author: aleksey
  */
 
-#ifndef MODULE_LIB_MODULE_EXTIRC_H_
-#define MODULE_LIB_MODULE_EXTIRC_H_
+#ifndef MODULE_EXTIRC_H_
+#define MODULE_EXTIRC_H_
 
 #include <module-base.h>
 #include <stdint.h>
@@ -61,4 +61,4 @@ int module_EXTIRC_clearInterrupt(module_EXTIRC_Channel_t channel);
 int module_EXTIRC_Setup(module_EXTIRC_Channel_t channel, module_EXTIRC_Level_t level);
 
 
-#endif /* MODULE_LIB_MODULE_EXTIRC_H_ */
+#endif /* MODULE_EXTIRC_H_ */

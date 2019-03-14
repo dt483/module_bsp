@@ -1,6 +1,11 @@
 #include <module-base.h>
 #include <stdint.h>
 
+
+#ifndef MODULE_UART_H_
+#define MODULE_UART_H_
+
+
 typedef enum {  //
 	UART_Speed_1200   = 4255,
 	UART_Speed_2400   = 2133,
@@ -195,3 +200,4 @@ void module_UART_send (volatile module_UART_controller_t * uartInstance, char da
 void module_UART_sendConsole (char data);
 void module_UART_clearFIFO (volatile module_UART_controller_t * uartInstance);
 
+#endif /* MODULE_UART_H_*/

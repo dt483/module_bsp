@@ -5,10 +5,10 @@
  *      Author: aleksey
  */
 
-#include <module-libelf.h>
 #include <module-nmcload.h>
 
-int module_NMLOAD_GetBoardDesc(int index, PL_Access *access)
+
+int module_NMCLOAD_GetBoardDesc(int index, PL_Access *access)
 {
 
 	if((index != 1) && (index != 2)) {
@@ -59,7 +59,7 @@ int module_NMLOAD_GetBoardDesc(int index, PL_Access *access)
 	return PL_OK;
 }
 
-int module_NMLOAD_LoadInitCode(PL_Access * access, PL_Addr addrInitFile)
+int module_NMCLOAD_LoadInitCode(PL_Access * access, PL_Addr addrInitFile)
 {
 	PL_Word * pSrc, * pDest;
 	
@@ -91,9 +91,10 @@ int module_NMLOAD_LoadInitCode(PL_Access * access, PL_Addr addrInitFile)
 	PL_Word * RegLink = (PL_Word *) access->localNM_startAddr_ARM + ToARMOff;
 	*RegLink = 0;
 	// start processor
-	module_NMLOAD_Interrupt( access);
+	module_NMCLOAD_Interrupt( access);
+	//module_ARMSC_generate_NMU_interrupt(ARMSC_NMC1, ARMSC_NONMASKABLE_INT);
 
-	// wait for init complete
+	// wait for init complete and ReadyForCommand state
 	PL_Word Value;
 	// ATT: check const for cycles
 	for(i = 0; i < 1000; i++){
@@ -106,20 +107,49 @@ int module_NMLOAD_LoadInitCode(PL_Access * access, PL_Addr addrInitFile)
 	return PL_OK;
 }
 
-int module_NMLOAD_LoadProgramFile(PL_Access * access, PL_Addr addrProgram)
+
+int module_NMCLOAD_Halt(PL_Access * access, PL_Addr addrInitFile)
+{
+	int i;
+	PL_Word * RegLink = (PL_Word *) access->localNM_startAddr_ARM + ToARMOff;
+	*RegLink = 0;
+	PL_Word Value;
+
+	Value = *RegLink;
+	if (Value & ReadyForCommand)
+	{
+		_assert("NMCLOAD: NMC%i is already ready to accept command ",access->boardNumber );
+		return PL_OK;
+	}
+		module_NMCLOAD_Interrupt( access);
+
+	//wait for ReadyForCommand state
+	for(i = 0; i < 1000; i++){
+		Value = *RegLink;
+		if(Value & ReadyForCommand)
+			break;
+	}
+	if((Value & ReadyForCommand) == 0) return PL_ERROR;
+	return PL_OK;
+}
+
+int module_NMCLOAD_LoadProgramFile(PL_Access * access, PL_Addr addrProgram)
 {
 
     //printf("DEBUG: PL_LoadProgramFile Start \n\r");
 	if(access == 0 || addrProgram == 0)
 		return PL_ERROR;
 
-	//PL_Word status;
-	//PL_GetStatus(access, &status);
+	PL_Word status;
+	module_NMCLOAD_GetStatus(access, &status);
 
 	// Проверяем состояние загрузчика.
     //printf("DEBUG: PL_LoadProgramFile - Check Status \n\r");
-	//if ((status & ReadyForCommand) != ReadyForCommand)
-		//return PL_ERROR;
+	if ((status & ReadyForCommand) != ReadyForCommand)
+	{
+		_runtime_error("NMCLOAD: NMC loader has non-ready status");
+		return PL_ERROR;
+	}
 
 	Elf32_Ehdr * ehdr = (Elf32_Ehdr *) addrProgram;
 
@@ -128,16 +158,16 @@ int module_NMLOAD_LoadProgramFile(PL_Access * access, PL_Addr addrProgram)
 
 	PL_Word * startAddr; 
 	//PL_Word sharedMemSize;
-	startAddr = (PL_Word *) access->localNM_size_ARM;
+	startAddr = (PL_Word *) access->localNM_startAddr_ARM;
 	//sharedMemSize = access->SM_size_ARM;
 	
-	SynchroBlock * SyncToARM;
-	SynchroBlock * SyncFromARM;
+	volatile SynchroBlock * SyncToARM;
+	volatile SynchroBlock * SyncFromARM;
 
 	SyncToARM = (SynchroBlock *)(startAddr + SyncToARMOff);
 	SyncFromARM = (SynchroBlock *)(startAddr + SyncFromARMOff);
-	PL_Word * ToARMAddr = startAddr + ToARMOff;
-	PL_Word * FromARMAddr = startAddr + FromARMOff;
+	volatile PL_Word * ToARMAddr = startAddr + ToARMOff;
+	volatile PL_Word * FromARMAddr = startAddr + FromARMOff;
 
 	// ATT: check address
 	Elf32_Phdr * phdr = (Elf32_Phdr *) (addrProgram + ehdr->e_phoff);
@@ -192,11 +222,17 @@ int module_NMLOAD_LoadProgramFile(PL_Access * access, PL_Addr addrProgram)
 	*ToARMAddr = 0;
 	*FromARMAddr = RUN_PROGRAM;
 
+	while (!(*ToARMAddr==2))
+	{
+
+	}
+	//_debug ("FromARMAddr value = 0x%X", *FromARMAddr);
+	//_debug ("ToARMAddr value = 0x%X", *ToARMAddr);
 
 	return PL_OK;
 }
 
-int module_NMLOAD_WriteMemBlock(PL_Access * access, PL_Word * block, PL_Addr address, PL_Word len)
+int module_NMCLOAD_WriteMemBlock(PL_Access * access, PL_Word * block, PL_Addr address, PL_Word len)
 {
 	int res;
 	PL_Word * pSrc, * pDest;
@@ -217,7 +253,7 @@ int module_NMLOAD_WriteMemBlock(PL_Access * access, PL_Word * block, PL_Addr add
 	return PL_OK;
 }
 
-int module_NMLOAD_ReadMemBlock(PL_Access * access, PL_Word * block, PL_Addr address, PL_Word len)
+int module_NMCLOAD_ReadMemBlock(PL_Access * access, PL_Word * block, PL_Addr address, PL_Word len)
 {
 	int res;
 	PL_Word * pSrc, * pDest;
@@ -237,7 +273,7 @@ int module_NMLOAD_ReadMemBlock(PL_Access * access, PL_Word * block, PL_Addr addr
 	return PL_OK;
 }
 
-int module_NMLOAD_SyncArray(
+int module_NMCLOAD_SyncArray(
 	PL_Access * access,     
 	int value,
 	PL_Addr outAddress,
@@ -304,13 +340,13 @@ int module_NMLOAD_SyncArray(
 	return PL_OK;
 }
 
-int module_NMLOAD_Sync(
+int module_NMCLOAD_Sync(
 	PL_Access * access,
 	int value,
 	int * returnValue)
 {
 
-	return module_NMLOAD_SyncArray(
+	return module_NMCLOAD_SyncArray(
 		access,
 		value,
 		0,
@@ -321,23 +357,28 @@ int module_NMLOAD_Sync(
 }
 
 
-int module_NMLOAD_Interrupt(PL_Access * access)
+int module_NMCLOAD_Interrupt(PL_Access * access)
 {
 	//Generate non-maskable interrupt
 	module_ARMSC_NMCnum_t nmc_num;
+	uint32_t value = 0;
 	switch(access->boardNumber){
-		case 0:
-			nmc_num = ARMSC_NMC0;
-			break;
 		case 1:
 			nmc_num = ARMSC_NMC1;
+			value = 1 << 4;
+			break;
+		case 2:
+			nmc_num = ARMSC_NMC2;
+			value = 1 << 5;
 			break;
 	}
 	module_ARMSC_generate_NMU_interrupt(nmc_num, ARMSC_NONMASKABLE_INT);
+	//PL_Word * const CtrlNMURegAddr = (PL_Word *)0x0fff81038;
+	//*CtrlNMURegAddr = value;
 	return PL_OK;
 }
 
-int module_NMLOAD_GetStatus(PL_Access * access, PL_Word * status)
+int module_NMCLOAD_GetStatus(PL_Access * access, PL_Word * status)
 {
 	PL_Word * RegLink = (PL_Word *) access->localNM_startAddr_ARM + ToARMOff;
 	*status = *RegLink;
@@ -359,7 +400,7 @@ int choose_area(PL_Access * access, PL_Addr address, PL_Word len,
 	{
 		if((address + len) > access->localNM_size_NMC) return PL_BADADDRESS; //error if array is not fit in NMC bank
 		if ((RW == 1) && (address < buffAddrOff))	return PL_BADADDRESS; //error if adress in loader range
-		*pDest = (PL_Word *) (access->localNM_size_ARM) + address; //adress in byte
+		*pDest = (PL_Word *) (access->localNM_startAddr_ARM) + address; //adress in byte
 	}
 	// NM array in local bank
 	else if((address >= access->localNM_startAddr_NMC) &&

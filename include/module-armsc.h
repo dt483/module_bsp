@@ -12,11 +12,10 @@
 #ifndef MODULE_LIB_INCLUDE_MODULE_ARMSC_H_
 #define MODULE_LIB_INCLUDE_MODULE_ARMSC_H_
 
-/*TODO:*/
-/*Implemented only NMU interrupts control */
+/* LIMITS: Implemented only NMU interrupts control */
 
 typedef struct {
-	uint32_t	REMAPSTA	;	/*Текущий тип отображения памяти                                                       */
+    uint32_t	REMAPSTA	;	/*Текущий тип отображения памяти                                                       */
     uint32_t	REMAPSET	;	/* Установить REMAPSTA                                                                 */
     uint32_t	REMAPCLR	;	/* Сбросить REMAPSTA                                                                   */
     uint32_t	reserved_0	;	/* зарезервировано                                                                     */
@@ -49,8 +48,8 @@ typedef enum {
 }  module_ARMSC_intNum_t;
 
 typedef enum {
-	ARMSC_NMC0 = 0,
-	ARMSC_NMC1 = 1,
+	ARMSC_NMC1 = 0,
+	ARMSC_NMC2 = 1,
 }  module_ARMSC_NMCnum_t;
 
 typedef enum {
@@ -58,6 +57,8 @@ typedef enum {
 	ARMSC_HIGH_PRIORITY_INT = 2 ,
 	ARMSC_NONMASKABLE_INT = 4
 }  module_ARMSC_typeInt_t;
+
+
 
 /*Function protorypes*/
 int module_ARMSC_get_NMU_interrupt_status (module_ARMSC_intNum_t interruptNumber);
