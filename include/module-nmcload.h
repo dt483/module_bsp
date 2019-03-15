@@ -20,12 +20,6 @@
 #define  MODULE_NMCLOAD_H_
 
 
-/* TODO: избавиться от PL_Addr и PL_word */
-// 32 bit unsigned. NMC memory element type.
-typedef uint32_t PL_Word;
-// 32 bit unsigned. NMC address type.
-typedef uint32_t PL_Addr;
-
 // Processor descriptor
 typedef struct _PL_Access{
 	int boardNumber;
@@ -42,16 +36,16 @@ typedef struct _PL_Access{
 	uint32_t sharedNM_size_ARM; 			// 8-bit access size to another NM
 
 	// SM array
-	PL_Addr SM_startAddr_NMC;				// 32-bit access to Shared Memory
-	PL_Addr SM_startAddr_ARM;					// 8-bit access to Shared Memory
-	PL_Word SM_size_NMC;						// 32-bit access size of Shared Memory
-	PL_Word SM_size_ARM;						// 8-bit access size of Shared Memory
+	uint32_t SM_startAddr_NMC;				// 32-bit access to Shared Memory
+	uint32_t SM_startAddr_ARM;					// 8-bit access to Shared Memory
+	uint32_t SM_size_NMC;						// 32-bit access size of Shared Memory
+	uint32_t SM_size_ARM;						// 8-bit access size of Shared Memory
 
 	// AM array
-	PL_Addr AM_startAddr_NMC;				// 32-bit access to ARM Memory
-	PL_Addr AM_startAddr_ARM;					// 8-bit access to ARM Memory
-	PL_Word AM_size_NMC;						// 32-bit access size of ARM Memory
-	PL_Word AM_size_ARM;						// 8-bit access size of ARM Memory
+	uint32_t AM_startAddr_NMC;				// 32-bit access to ARM Memory
+	uint32_t AM_startAddr_ARM;					// 8-bit access to ARM Memory
+	uint32_t AM_size_NMC;						// 32-bit access size of ARM Memory
+	uint32_t AM_size_ARM;						// 8-bit access size of ARM Memory
 
 } PL_Access;
 
@@ -82,10 +76,10 @@ typedef struct _PL_Access{
 	static const int ANY_COMMAND  = 7;        // Mask is any command set.
 
 	typedef struct _SynchroBlock {
-		PL_Word syncFlag; // Synchro flag.
-		PL_Word array_addr; // Sync array address.
-		PL_Word array_len; // Sync array length in 32-bit words.
-		PL_Word value;  // Sync value.
+		uint32_t syncFlag; // Synchro flag.
+		uint32_t array_addr; // Sync array address.
+		uint32_t array_len; // Sync array length in 32-bit words.
+		uint32_t value;  // Sync value.
 	} SynchroBlock;
 
 	// Addresses of syncro blocks.
@@ -112,14 +106,14 @@ int module_NMCLOAD_GetBoardDesc(int index, PL_Access * access);
 
 
 // Call NM initialization code
-int module_NMCLOAD_LoadInitCode(PL_Access * access, PL_Addr addrInitFile);
+int module_NMCLOAD_LoadInitCode(PL_Access * access, uint32_t addrInitFile);
 
 //---------------------
 // Processor functions.
 //---------------------
 
 // Load user program on processor and start execution.
-int module_NMCLOAD_LoadProgramFile(PL_Access * access, PL_Addr addrProgram);
+int module_NMCLOAD_LoadProgramFile(PL_Access * access, uint32_t addrProgram);
 
 // Wait nm-programm ending .    НЕ РЕАЛИЗОВАНО!
 // load nm-programm result if the pointer 'returnValue' is not NULL.
@@ -130,15 +124,15 @@ int module_NMCLOAD_LoadProgramFile(PL_Access * access, PL_Addr addrProgram);
 // block    - Pointer to source array in PC memory.
 // len      - Size of array in 32-bit words.
 // address  - Address of destination array in NMC memory.
-int module_NMCLOAD_WriteMemBlock(PL_Access * access, PL_Word * block,
-			PL_Addr address, PL_Word len);
+int module_NMCLOAD_WriteMemBlock(PL_Access * access, uint32_t * block,
+			uint32_t address, uint32_t len);
 
 // Read array from shared memory.
 // block    - Pointer to dest buffer in PC memory.
 // len      - Size of array in 32-bit words.
 // address  - Address of source array in NMC memory.
-int module_NMCLOAD_ReadMemBlock(PL_Access * access, PL_Word * block,
-			PL_Addr address, PL_Word len);
+int module_NMCLOAD_ReadMemBlock(PL_Access * access, uint32_t * block,
+			uint32_t address, uint32_t len);
 
 // Barrier synchronization with program on board processor.
 // value        - value sent to processor.
@@ -160,24 +154,24 @@ int module_NMCLOAD_SyncArray(
 	PL_Access * access,     // Processor descriptor.
 
 	int value,              // Value sent to processor.
-	PL_Addr outAddress,     // Address sent to processor.
-	PL_Word outLen,         // Size sent to processor.
+	uint32_t outAddress,     // Address sent to processor.
+	uint32_t outLen,         // Size sent to processor.
 	int * returnValue,      // Value received from processor.
-	PL_Addr * inAddress,    // Address received from processor.
-	PL_Word *inLen          // Size received from processor.
+	uint32_t * inAddress,    // Address received from processor.
+	uint32_t *inLen          // Size received from processor.
 	);
 
 // Send interrupt on processor.
 int module_NMCLOAD_Interrupt(PL_Access * access);
 
-int module_NMCLOAD_GetStatus(PL_Access * access, PL_Word * status);
+int module_NMCLOAD_GetStatus(PL_Access * access, uint32_t * status);
 
 	//---------------------
 	// Common functions.
 	//---------------------
-int choose_area(PL_Access *access, PL_Addr address, PL_Word len,
-		PL_Word **pDest, int RW);
+int choose_area(PL_Access *access, uint32_t address, uint32_t len,
+		uint32_t **pDest, int RW);
 
-int check_arm_addr(PL_Access * access, PL_Addr address, PL_Word len, int RW);
+int check_arm_addr(PL_Access * access, uint32_t address, uint32_t len, int RW);
 
 #endif  // MODULE_NMCLOAD_H_

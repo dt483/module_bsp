@@ -59,43 +59,43 @@ int module_NMCLOAD_GetBoardDesc(int index, PL_Access *access)
 	return PL_OK;
 }
 
-int module_NMCLOAD_LoadInitCode(PL_Access * access, PL_Addr addrInitFile)
+int module_NMCLOAD_LoadInitCode(PL_Access * access, uint32_t addrInitFile)
 {
-	PL_Word * pSrc, * pDest;
+	uint32_t * pSrc, * pDest;
 	
 	if(access == 0 || addrInitFile == 0)
 		return PL_ERROR;
 
-	Elf32_Ehdr * ehdr = (Elf32_Ehdr *) addrInitFile;
+	Elf32_Ehdr * elf_header = (Elf32_Ehdr *) addrInitFile;
 
 	// Check ELF-header
-	if(check_Ehdr(ehdr)) return PL_FILE;
+	if(check_Ehdr(elf_header)) return PL_FILE;
 
 	//Check number of
-	if(ehdr->e_phnum != 1 || ehdr->e_entry != 0) return PL_FILE;
+	if(elf_header->e_phnum != 1 || elf_header->e_entry != 0) return PL_FILE;
 
 	// ATT: check address
-	Elf32_Phdr * phdr = (Elf32_Phdr *) (addrInitFile + ehdr->e_phoff);
-	if(phdr->p_paddr != 0) return PL_FILE;
+	Elf32_Phdr * program_header = (Elf32_Phdr *) (addrInitFile + elf_header->e_phoff);
+	if(program_header->p_paddr != 0) return PL_FILE;
 	
-	pDest = (PL_Word *) access->localNM_startAddr_ARM;
+	pDest = (uint32_t *) access->localNM_startAddr_ARM;
 	// ATT: check address
-	pSrc = (PL_Word *) (addrInitFile + phdr->p_offset);
-	int size = (phdr->p_filesz + 3) >> 2;
+	pSrc = (uint32_t *) (addrInitFile + program_header->p_offset);
+	int size = (program_header->p_filesz + 3) >> 2;
 	int i;
 /****DEBUG****/////printf("PL_LoadInitCode 44 0000 pDest="); //printf(pDest); //printf("size="); //printf(size); //printf("\n\r");;
 	for(i = 0; i < size; i++)
 		*pDest++ = *pSrc++;
 
 	// ATT: check address
-	PL_Word * RegLink = (PL_Word *) access->localNM_startAddr_ARM + ToARMOff;
+	uint32_t * RegLink = (uint32_t *) access->localNM_startAddr_ARM + ToARMOff;
 	*RegLink = 0;
 	// start processor
 	module_NMCLOAD_Interrupt( access);
 	//module_ARMSC_generate_NMU_interrupt(ARMSC_NMC1, ARMSC_NONMASKABLE_INT);
 
 	// wait for init complete and ReadyForCommand state
-	PL_Word Value;
+	uint32_t Value;
 	// ATT: check const for cycles
 	for(i = 0; i < 1000; i++){
 		Value = *RegLink;
@@ -108,12 +108,12 @@ int module_NMCLOAD_LoadInitCode(PL_Access * access, PL_Addr addrInitFile)
 }
 
 
-int module_NMCLOAD_Halt(PL_Access * access, PL_Addr addrInitFile)
+int module_NMCLOAD_Halt(PL_Access * access, uint32_t addrInitFile)
 {
 	int i;
-	PL_Word * RegLink = (PL_Word *) access->localNM_startAddr_ARM + ToARMOff;
+	uint32_t * RegLink = (uint32_t *) access->localNM_startAddr_ARM + ToARMOff;
 	*RegLink = 0;
-	PL_Word Value;
+	uint32_t Value;
 
 	Value = *RegLink;
 	if (Value & ReadyForCommand)
@@ -133,14 +133,14 @@ int module_NMCLOAD_Halt(PL_Access * access, PL_Addr addrInitFile)
 	return PL_OK;
 }
 
-int module_NMCLOAD_LoadProgramFile(PL_Access * access, PL_Addr addrProgram)
+int module_NMCLOAD_LoadProgramFile(PL_Access * access, uint32_t addrProgram)
 {
 
     //printf("DEBUG: PL_LoadProgramFile Start \n\r");
 	if(access == 0 || addrProgram == 0)
 		return PL_ERROR;
 
-	PL_Word status;
+	uint32_t status;
 	module_NMCLOAD_GetStatus(access, &status);
 
 	// Проверяем состояние загрузчика.
@@ -156,9 +156,9 @@ int module_NMCLOAD_LoadProgramFile(PL_Access * access, PL_Addr addrProgram)
 	// is it program?
 	if(check_Ehdr(ehdr)) return PL_FILE;
 
-	PL_Word * startAddr; 
+	uint32_t * startAddr;
 	//PL_Word sharedMemSize;
-	startAddr = (PL_Word *) access->localNM_startAddr_ARM;
+	startAddr = (uint32_t *) access->localNM_startAddr_ARM;
 	//sharedMemSize = access->SM_size_ARM;
 	
 	volatile SynchroBlock * SyncToARM;
@@ -166,21 +166,21 @@ int module_NMCLOAD_LoadProgramFile(PL_Access * access, PL_Addr addrProgram)
 
 	SyncToARM = (SynchroBlock *)(startAddr + SyncToARMOff);
 	SyncFromARM = (SynchroBlock *)(startAddr + SyncFromARMOff);
-	volatile PL_Word * ToARMAddr = startAddr + ToARMOff;
-	volatile PL_Word * FromARMAddr = startAddr + FromARMOff;
+	volatile uint32_t * ToARMAddr = startAddr + ToARMOff;
+	volatile uint32_t * FromARMAddr = startAddr + FromARMOff;
 
 	// ATT: check address
 	Elf32_Phdr * phdr = (Elf32_Phdr *) (addrProgram + ehdr->e_phoff);
-	PL_Word i, j;
+	uint32_t i, j;
 	int res;
 
-	PL_Word * pSrc, * pDest;
-	PL_Word size, fullSegmentSize;
+	uint32_t * pSrc, * pDest;
+	uint32_t size, fullSegmentSize;
 	
 	// check load address
 	for(i = 0; i < ehdr->e_phnum; i++) {
 	    if(phdr[i].p_type != PT_LOAD) continue; //Если сегмент не загружаемый, переходим к след.
-	    PL_Addr Addr = phdr[i].p_paddr; // Физический адрес загружаемого сегмента
+	    uint32_t Addr = phdr[i].p_paddr; // Физический адрес загружаемого сегмента
 	    unsigned int Full_size = phdr[i].p_memsz >> 2; //Размер загружаемого сегмента в памяти (в 32-разрядных словах)
 	   
 
@@ -193,7 +193,7 @@ int module_NMCLOAD_LoadProgramFile(PL_Access * access, PL_Addr addrProgram)
 	for(i = 0; i < ehdr->e_phnum; i++) {
 		if(phdr[i].p_type != PT_LOAD) continue;
 
-	    PL_Addr Addr = phdr[i].p_paddr;
+	    uint32_t Addr = phdr[i].p_paddr;
 	    unsigned int Full_size = phdr[i].p_memsz >> 2;
 	    if ((res = choose_area(access, Addr, Full_size, &pDest, 1)) != PL_OK)
 			return res;
@@ -201,7 +201,7 @@ int module_NMCLOAD_LoadProgramFile(PL_Access * access, PL_Addr addrProgram)
 		size = phdr[i].p_filesz >> 2;
 
 		// ATT: check address
-		pSrc = (PL_Word *) (addrProgram + phdr[i].p_offset);
+		pSrc = (uint32_t *) (addrProgram + phdr[i].p_offset);
 
 		for(j = 0; j < size; j++)
 			*pDest++ = *pSrc++;
@@ -232,14 +232,14 @@ int module_NMCLOAD_LoadProgramFile(PL_Access * access, PL_Addr addrProgram)
 	return PL_OK;
 }
 
-int module_NMCLOAD_WriteMemBlock(PL_Access * access, PL_Word * block, PL_Addr address, PL_Word len)
+int module_NMCLOAD_WriteMemBlock(PL_Access * access, uint32_t * block, uint32_t address, uint32_t len)
 {
 	int res;
-	PL_Word * pSrc, * pDest;
-	PL_Word i;
+	uint32_t * pSrc, * pDest;
+	uint32_t i;
 	if(access == 0 || block == 0) return PL_ERROR;
 
-	if ((res = check_arm_addr(access, (PL_Addr) block, len, 0)) != PL_OK)
+	if ((res = check_arm_addr(access, (uint32_t) block, len, 0)) != PL_OK)
 		return res;
 
 	if ((res = choose_area(access, address, len, &pDest, 1)) != PL_OK)
@@ -253,14 +253,14 @@ int module_NMCLOAD_WriteMemBlock(PL_Access * access, PL_Word * block, PL_Addr ad
 	return PL_OK;
 }
 
-int module_NMCLOAD_ReadMemBlock(PL_Access * access, PL_Word * block, PL_Addr address, PL_Word len)
+int module_NMCLOAD_ReadMemBlock(PL_Access * access, uint32_t * block, uint32_t address, uint32_t len)
 {
 	int res;
-	PL_Word * pSrc, * pDest;
-	PL_Word i;
+	uint32_t * pSrc, * pDest;
+	uint32_t i;
 	if(access == 0 || block == 0) return PL_ERROR;
 
-	if ((res = check_arm_addr(access, (PL_Addr) block, len, 1)) != PL_OK)
+	if ((res = check_arm_addr(access, (uint32_t) block, len, 1)) != PL_OK)
 		return res;
 
 	if ((res = choose_area(access, address, len, &pSrc, 0)) != PL_OK)
@@ -276,29 +276,29 @@ int module_NMCLOAD_ReadMemBlock(PL_Access * access, PL_Word * block, PL_Addr add
 int module_NMCLOAD_SyncArray(
 	PL_Access * access,     
 	int value,
-	PL_Addr outAddress,
-	PL_Word outLen,
+	uint32_t outAddress,
+	uint32_t outLen,
 	int * returnValue,
-	PL_Addr * inAddress,
-	PL_Word * inLen)
+	uint32_t * inAddress,
+	uint32_t * inLen)
 {
 	if(access == 0) return PL_ERROR;
 	
-	PL_Word * startAddr = (PL_Word *) access->localNM_startAddr_ARM;
+	uint32_t * startAddr = (uint32_t *) access->localNM_startAddr_ARM;
 
 	volatile SynchroBlock * SyncToARM, * SyncFromARM;
 	SyncToARM = (SynchroBlock *)(startAddr + SyncToARMOff);
 	SyncFromARM = (SynchroBlock *)(startAddr + SyncFromARMOff);
 
 	// Используем бит 0..
-	PL_Word syncFlag = 1;
+	uint32_t syncFlag = 1;
 
 	// Записываем передаваемые значения.
 	SyncFromARM->value = value;
 	SyncFromARM->array_addr = outAddress;
 	SyncFromARM->array_len = outLen;
 
-	PL_Word Value = 0;
+	uint32_t Value = 0;
 	//clock_t wait_time;
 	//#define DELTA_wait_time	5000
 
@@ -378,9 +378,9 @@ int module_NMCLOAD_Interrupt(PL_Access * access)
 	return PL_OK;
 }
 
-int module_NMCLOAD_GetStatus(PL_Access * access, PL_Word * status)
+int module_NMCLOAD_GetStatus(PL_Access * access, uint32_t * status)
 {
-	PL_Word * RegLink = (PL_Word *) access->localNM_startAddr_ARM + ToARMOff;
+	uint32_t * RegLink = (uint32_t *) access->localNM_startAddr_ARM + ToARMOff;
 	*status = *RegLink;
 	return PL_OK;
 }
@@ -390,17 +390,17 @@ int module_NMCLOAD_GetStatus(PL_Access * access, PL_Word * status)
 	// Common functions.
 	//---------------------
 
-int choose_area(PL_Access * access, PL_Addr address, PL_Word len,
-		PL_Word * *pDest, int RW)
+int choose_area(PL_Access * access, uint32_t address, uint32_t len,
+		uint32_t * *pDest, int RW)
 {
-	PL_Addr max_adr;
+	uint32_t max_adr;
 
 	// NM array in local mirrored to 0x0 address range
 	if (address < access->localNM_size_NMC)
 	{
 		if((address + len) > access->localNM_size_NMC) return PL_BADADDRESS; //error if array is not fit in NMC bank
 		if ((RW == 1) && (address < buffAddrOff))	return PL_BADADDRESS; //error if adress in loader range
-		*pDest = (PL_Word *) (access->localNM_startAddr_ARM) + address; //adress in byte
+		*pDest = (uint32_t *) (access->localNM_startAddr_ARM) + address; //adress in byte
 	}
 	// NM array in local bank
 	else if((address >= access->localNM_startAddr_NMC) &&
@@ -408,14 +408,14 @@ int choose_area(PL_Access * access, PL_Addr address, PL_Word len,
 	{
 		max_adr =access->localNM_startAddr_NMC + access->localNM_size_NMC;
 		if((address + len) > max_adr) return PL_BADADDRESS;
-		*pDest = (PL_Word *) (address * 4); //adress in byte
+		*pDest = (uint32_t *) (address * 4); //adress in byte
 	}
 	// SM array
 	else if((address >= access->SM_startAddr_NMC) && (address < ((access->SM_startAddr_NMC)+(access->SM_size_NMC))) )
 	{
 		max_adr = access->SM_startAddr_NMC + access->SM_size_NMC;
 		if((address + len) > max_adr) return PL_BADADDRESS;
-		*pDest = (PL_Word *) (address * 4); //adress in byte
+		*pDest = (uint32_t *) (address * 4); //adress in byte
 	}
 	else if((address >= access->AM_startAddr_NMC) && (address < ((access->AM_startAddr_NMC)+(access->AM_size_NMC))) )
 	{
@@ -425,7 +425,7 @@ int choose_area(PL_Access * access, PL_Addr address, PL_Word len,
 		//if ((RW == 1) && (address < writable_addrAM))	return PL_BADADDRESS;
 		if (RW == 1) _assert("Attempt to unsafe write to ARM memory. Address: 0x%X, len: 0x%X",
 				(uint32_t) address,(uint32_t) len);
-		*pDest = (PL_Word *) (address * 4); //adress in byte
+		*pDest = (uint32_t *) (address * 4); //adress in byte
 
 	} else
 	{
@@ -435,10 +435,10 @@ int choose_area(PL_Access * access, PL_Addr address, PL_Word len,
 	return PL_OK;
 }
 
-int check_arm_addr(PL_Access * access, PL_Addr address, PL_Word len, int RW)
+int check_arm_addr(PL_Access * access, uint32_t address, uint32_t len, int RW)
 {
-	PL_Addr max_adr;
-	PL_Word len_bytes = len * 4;
+	uint32_t max_adr;
+	uint32_t len_bytes = len * 4;
 	//int in_bytes = sizeof(PL_Addr);
 
 	if((address >= (access->localNM_size_ARM)) &&
