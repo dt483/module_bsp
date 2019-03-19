@@ -6,3 +6,7 @@
 /Debug/*
 /Release/*
 /Debug/
+
+#doxygen files:
+*.doxyfile
+*.doxyfile.*

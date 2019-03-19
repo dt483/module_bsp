@@ -13,6 +13,7 @@
 #include <module-base.h>
 #include <module-armsc.h>
 #include <module-libelf.h>
+#include <module-vic.h>
 
 
 
@@ -21,7 +22,7 @@
 
 
 // Processor descriptor
-typedef struct _PL_Access{
+typedef struct {
 	int boardNumber;
 	int flag;
 
@@ -47,18 +48,21 @@ typedef struct _PL_Access{
 	uint32_t AM_size_NMC;						// 32-bit access size of ARM Memory
 	uint32_t AM_size_ARM;						// 8-bit access size of ARM Memory
 
-} PL_Access;
+} module_NMC_descriptor_t;
 
+module_NMC_descriptor_t NMcore1_desc;
+module_NMC_descriptor_t NMcore2_desc;
 
 	// Library functions return values.
 	// All library functions return result code.
 	enum RetValue {
-		PL_OK       = 0,    // OK.
-		PL_ERROR    = 1,    // Error.
-		PL_TIMEOUT  = 2,    // Timeout of wait for operation.
-		PL_FILE     = 3,    // Can't find file for load.
-		PL_BADADDRESS = 4   // Bad address ranges in user program.
-	};
+		NMCLOAD_OK       = 0,    // OK.
+		NMCLOAD_ERROR    = 1,    // Error.
+		NMCLOAD_TIMEOUT  = 2,    // Timeout of wait for operation.
+		NMCLOAD_FILE     = 3,    // Can't find file for load.
+		NMCLOAD_BADADDRESS = 4   // Bad address ranges in user program.
+	} RetValue_t;
+
 
 	static const int ToARMOff = 0x100; // offset of RegLink
 	static const int FromARMOff = 0x101;
@@ -75,12 +79,12 @@ typedef struct _PL_Access{
 	static const int RUN_PROGRAM  = 4;        // Run user program.
 	static const int ANY_COMMAND  = 7;        // Mask is any command set.
 
-	typedef struct _SynchroBlock {
+	typedef struct {
 		uint32_t syncFlag; // Synchro flag.
 		uint32_t array_addr; // Sync array address.
 		uint32_t array_len; // Sync array length in 32-bit words.
 		uint32_t value;  // Sync value.
-	} SynchroBlock;
+	} module_NMCLOAD_SynchroBlock_t;
 
 	// Addresses of syncro blocks.
 	//const int SyncToARMOff = 0x102;
@@ -94,6 +98,27 @@ typedef struct _PL_Access{
 	//static int globalTimeout = 0;
 	//Пока только бесконечное ожидание
 
+	typedef enum {
+		NMCLOAD_COMMAND_PRINT = 0,
+		NMCLOAD_COMMAND_COMMON = 1
+	} module_NMCLOAD_commandType_t;
+
+
+	static const int CommandToArm = 0x114;
+
+	typedef struct {
+		uint32_t syncFlag;		// Syncro flag.
+		uint32_t commantType;	// Command type value.
+		uint32_t bufferAddr;	// Command data buffer address.
+		uint32_t bufferLen;		// Command data buffer length in 32-bit words.
+		uint32_t handlerStatus;	// ARM handler status values*/
+	} module_NMCLOAD_commandBlock_t;
+
+
+#define NUMBER_OF_HANDLERS 3
+typedef int (*command_fhandler_t)(uint32_t bufferAddr, uint32_t bufferLen);
+// Command Interrupt handler
+//void module_NMCLOAD_commandHandler (void)
 
 //------------------
 // Common functions.
@@ -102,18 +127,18 @@ typedef struct _PL_Access{
 // Create descriptor for processor number 'procNo' on board.
 // Return processor descriptor in variable pointed by 'access'.
 // Processor numbers is 0-3.
-int module_NMCLOAD_GetBoardDesc(int index, PL_Access * access);
+int module_NMCLOAD_GetBoardDesc(int index, module_NMC_descriptor_t * access);
 
 
 // Call NM initialization code
-int module_NMCLOAD_LoadInitCode(PL_Access * access, uint32_t addrInitFile);
+int module_NMCLOAD_LoadInitCode(module_NMC_descriptor_t * access, uint32_t addrInitFile);
 
 //---------------------
 // Processor functions.
 //---------------------
 
 // Load user program on processor and start execution.
-int module_NMCLOAD_LoadProgramFile(PL_Access * access, uint32_t addrProgram);
+int module_NMCLOAD_LoadProgramFile(module_NMC_descriptor_t * access, uint32_t addrProgram);
 
 // Wait nm-programm ending .    НЕ РЕАЛИЗОВАНО!
 // load nm-programm result if the pointer 'returnValue' is not NULL.
@@ -124,20 +149,20 @@ int module_NMCLOAD_LoadProgramFile(PL_Access * access, uint32_t addrProgram);
 // block    - Pointer to source array in PC memory.
 // len      - Size of array in 32-bit words.
 // address  - Address of destination array in NMC memory.
-int module_NMCLOAD_WriteMemBlock(PL_Access * access, uint32_t * block,
+int module_NMCLOAD_WriteMemBlock(module_NMC_descriptor_t * access, uint32_t * block,
 			uint32_t address, uint32_t len);
 
 // Read array from shared memory.
 // block    - Pointer to dest buffer in PC memory.
 // len      - Size of array in 32-bit words.
 // address  - Address of source array in NMC memory.
-int module_NMCLOAD_ReadMemBlock(PL_Access * access, uint32_t * block,
+int module_NMCLOAD_ReadMemBlock(module_NMC_descriptor_t * access, uint32_t * block,
 			uint32_t address, uint32_t len);
 
 // Barrier synchronization with program on board processor.
 // value        - value sent to processor.
 // returnValue  - value received from processor.
-int module_NMCLOAD_Sync(PL_Access * access, int value, int * returnValue);
+int module_NMCLOAD_Sync(module_NMC_descriptor_t * access, int value, int * returnValue);
 
 
 // Barrier synchronization with program on board processor.
@@ -151,7 +176,7 @@ int module_NMCLOAD_Sync(PL_Access * access, int value, int * returnValue);
 // Values return only if pointers are not NULL.
 
 int module_NMCLOAD_SyncArray(
-	PL_Access * access,     // Processor descriptor.
+	module_NMC_descriptor_t * access,     // Processor descriptor.
 
 	int value,              // Value sent to processor.
 	uint32_t outAddress,     // Address sent to processor.
@@ -162,16 +187,23 @@ int module_NMCLOAD_SyncArray(
 	);
 
 // Send interrupt on processor.
-int module_NMCLOAD_Interrupt(PL_Access * access);
+int module_NMCLOAD_Interrupt(module_NMC_descriptor_t * access);
 
-int module_NMCLOAD_GetStatus(PL_Access * access, uint32_t * status);
+
+int module_NMCLOAD_GetStatus(module_NMC_descriptor_t * access, uint32_t * status);
+
+//Link command function handler with command slot
+int module_NMCLOAD_linkHandler (int slot, void * f_handler);
+
+//1-st level interrupt handler for NM-interrupt
+void module_NMCLOAD_commandHandler_core1 (void);
 
 	//---------------------
 	// Common functions.
 	//---------------------
-int choose_area(PL_Access *access, uint32_t address, uint32_t len,
+int choose_area(module_NMC_descriptor_t *access, uint32_t address, uint32_t len,
 		uint32_t **pDest, int RW);
 
-int check_arm_addr(PL_Access * access, uint32_t address, uint32_t len, int RW);
+int check_arm_addr(module_NMC_descriptor_t * access, uint32_t address, uint32_t len, int RW);
 
 #endif  // MODULE_NMCLOAD_H_
