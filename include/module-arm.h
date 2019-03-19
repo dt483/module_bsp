@@ -1,7 +1,8 @@
-/*
- * module-arm.h
+/**
+ * @file module-arm.h
+ * @brief Specific arm-asm functions
  *
- *  Created on: 8 февр. 2019 г.
+ * Created on: 8 февр. 2019 г.
  *      Author: aleksey
  */
 
@@ -15,7 +16,9 @@
 #define NOP()						__asm volatile ( "NOP" );
 
 
-
+/**
+ * @brief module_ARM_irqUnblock
+ */
 void module_ARM_irqUnblock (void);
 void module_ARM_irqBlock (void);
 void module_ARM_vicEnable (void);
