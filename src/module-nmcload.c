@@ -419,6 +419,8 @@ int module_NMCLOAD_linkHandler (int slot, void * f_handler)
 #endif
 
 
+
+
 	return NMCLOAD_OK;
 }
 
@@ -428,16 +430,18 @@ int dummy_handler (uint32_t bufferAddr, uint32_t bufferLen)
 	return NMCLOAD_OK;
 }
 
+
 void module_NMCLOAD_commandHandler_core1 (void) __attribute__((interrupt ("IRQ")));
 void module_NMCLOAD_commandHandler_core1 (void)
 {
 	/*TODO: добавить поддержку второго ядра*/
 
-	uint32_t * cmdBlckAddr = (uint32_t *) NMcore1_desc.localNM_startAddr_ARM + CommandToArm;
+	uint32_t * cmdBlckAddr = 0;
+	cmdBlckAddr = (uint32_t *) NMcore1_desc.localNM_startAddr_ARM + CommandToArm;
 	module_NMCLOAD_commandBlock_t * cmdBlck= (module_NMCLOAD_commandBlock_t *) cmdBlckAddr;
 
 	// Установка флага занятости обработчика
-	cmdBlck->syncFlag = 1;
+	cmdBlck->handlerStatus = 0x1;
 
 	//2-nd level funvtion handler pointer
 	command_fhandler_t handler = 0;
@@ -457,11 +461,15 @@ void module_NMCLOAD_commandHandler_core1 (void)
 
 	if (handler_result) _assert ("NMCLOAD: 2-nd lvl handler returned non-zero status");
 
+
+
 	module_ARMSC_clear_NMU_interrupt(ARMSC_INT_NMC0HP);
 	module_VIC_finishHandling();
 
+	cmdBlck->handlerStatus = 0x0;
+
 	// Снятие флага занятости обработчика
-	cmdBlck->syncFlag = 0;
+
 }
 
 

@@ -104,10 +104,9 @@ module_NMC_descriptor_t NMcore2_desc;
 	} module_NMCLOAD_commandType_t;
 
 
-	static const int CommandToArm = 0x114;
+	static const int CommandToArm = 0x116;
 
 	typedef struct {
-		uint32_t syncFlag;		// Syncro flag.
 		uint32_t commantType;	// Command type value.
 		uint32_t bufferAddr;	// Command data buffer address.
 		uint32_t bufferLen;		// Command data buffer length in 32-bit words.
@@ -115,7 +114,7 @@ module_NMC_descriptor_t NMcore2_desc;
 	} module_NMCLOAD_commandBlock_t;
 
 
-#define NUMBER_OF_HANDLERS 3
+#define NUMBER_OF_HANDLERS 5
 typedef int (*command_fhandler_t)(uint32_t bufferAddr, uint32_t bufferLen);
 // Command Interrupt handler
 //void module_NMCLOAD_commandHandler (void)
