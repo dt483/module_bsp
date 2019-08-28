@@ -8,7 +8,7 @@
 #ifndef MODULE_EXTIRC_H_
 #define MODULE_EXTIRC_H_
 
-#include <module-base.h>
+#include "module-base.h"
 #include <stdint.h>
 
 typedef struct {

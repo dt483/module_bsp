@@ -8,8 +8,8 @@
 #ifndef MODULE_SPI_H_
 #define MODULE_SPI_H_
 
-#include <module-base.h>
-#include <module-gpio.h>
+#include "module-base.h"
+#include "module-gpio.h"
 #include <stdint.h>
 
 
@@ -169,9 +169,13 @@ int module_SPI_setMode (module_SPI_mode_t mode);
 int module_SPI_setDataSize (module_SPI_datasize_t datasize);
 int module_SPI_exchangeSingle(uint8_t* TxDataPointer, uint8_t* RxDataPointer);
 int module_SPI_exchangeMulti (uint8_t* TxDataPointer, uint8_t* RxDataPointer, uint32_t DataLen);
+void module_SPI_sendMulti (uint8_t* TxDataPointer, uint32_t DataLen);
 void module_SPI_setLoopBack(module_SPI_loopBack_t lbm);
 void module_SPI_setDevice( module_SPI_slaveNumber_t dev);
+void module_SPI_enableCS();
+void module_SPI_disableCS();
+int module_SPI_setDmaStatus(module_SPI_DMAstatus_t dmaSt);
 
-
+//int module_SPI_readFromFLASH (uint32_t startAddr, uint32_t len, uint8_t* RxDataPointer );
 
 #endif /* MODULE_LIB_MODULE_SPI_H_ */

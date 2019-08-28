@@ -5,7 +5,7 @@
  *      Author: aleksey
  */
 
-#include <include/module-dmac.h>
+#include "module-dmac.h"
 
 
 #define DMAC_ok 0

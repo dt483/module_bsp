@@ -9,7 +9,7 @@
 #ifndef MODULE_LIB_MODULE_ARM_H_
 #define MODULE_LIB_MODULE_ARM_H_
 
-#include <module-base.h>
+#include "module-base.h"
 
 
 	/* ASM macro defs */

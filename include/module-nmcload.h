@@ -8,18 +8,13 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-
-#include <stdint.h>
-#include <module-base.h>
-#include <module-armsc.h>
-#include <module-libelf.h>
-#include <module-vic.h>
-
-
-
-# ifndef MODULE_NMCLOAD_H_
+#ifndef MODULE_NMCLOAD_H_
 #define  MODULE_NMCLOAD_H_
 
+#include <stdint.h>
+#include "module-base.h"
+#include "module-armsc.h"
+#include "module-libelf.h"
 
 // Processor descriptor
 typedef struct {
@@ -50,8 +45,7 @@ typedef struct {
 
 } module_NMC_descriptor_t;
 
-module_NMC_descriptor_t NMcore1_desc;
-module_NMC_descriptor_t NMcore2_desc;
+
 
 	// Library functions return values.
 	// All library functions return result code.
@@ -92,11 +86,6 @@ module_NMC_descriptor_t NMcore2_desc;
 	static const int SyncToARMOff = 0x104;
 	static const int SyncFromARMOff = 0x108;
 
-	// период ожидания для функций SyncXXX.
-	// 0 - бесконечное ожидание.
-	// >0 - ожидание в миллисекундах.
-	//static int globalTimeout = 0;
-	//Пока только бесконечное ожидание
 
 	typedef enum {
 		NMCLOAD_COMMAND_PRINT = 0,
@@ -104,30 +93,24 @@ module_NMC_descriptor_t NMcore2_desc;
 	} module_NMCLOAD_commandType_t;
 
 
-	static const int CommandToArm = 0x116;
+	static const int CommandToArm = 0x11A; // Addresses of Command blocks.
 
 	typedef struct {
 		uint32_t commantType;	// Command type value.
 		uint32_t bufferAddr;	// Command data buffer address.
 		uint32_t bufferLen;		// Command data buffer length in 32-bit words.
 		uint32_t handlerStatus;	// ARM handler status values*/
+		uint32_t nmRequestStatus; // NM request status
 	} module_NMCLOAD_commandBlock_t;
 
 
-#define NUMBER_OF_HANDLERS 5
-typedef int (*command_fhandler_t)(uint32_t bufferAddr, uint32_t bufferLen);
-// Command Interrupt handler
-//void module_NMCLOAD_commandHandler (void)
+
 
 //------------------
 // Common functions.
 //------------------
 
-// Create descriptor for processor number 'procNo' on board.
-// Return processor descriptor in variable pointed by 'access'.
-// Processor numbers is 0-3.
-int module_NMCLOAD_GetBoardDesc(int index, module_NMC_descriptor_t * access);
-
+	void module_NMCLOAD_init(module_NMC_descriptor_t * NMcore1_desc, module_NMC_descriptor_t * NMcore2_desc);
 
 // Call NM initialization code
 int module_NMCLOAD_LoadInitCode(module_NMC_descriptor_t * access, uint32_t addrInitFile);
@@ -191,11 +174,8 @@ int module_NMCLOAD_Interrupt(module_NMC_descriptor_t * access);
 
 int module_NMCLOAD_GetStatus(module_NMC_descriptor_t * access, uint32_t * status);
 
-//Link command function handler with command slot
-int module_NMCLOAD_linkHandler (int slot, void * f_handler);
 
-//1-st level interrupt handler for NM-interrupt
-void module_NMCLOAD_commandHandler_core1 (void);
+void module_NMCLOAD_getCommandData (module_NMC_descriptor_t * access, module_NMCLOAD_commandBlock_t * local);
 
 	//---------------------
 	// Common functions.

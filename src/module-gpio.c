@@ -1,5 +1,5 @@
 
-#include <include/module-gpio.h>
+#include "module-gpio.h"
 
 /*static instances*/
 static volatile module_GPIO_controller_t * const module_GPIO_instance = (module_GPIO_controller_t *) (GPIO_BASE );

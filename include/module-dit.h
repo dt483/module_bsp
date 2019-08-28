@@ -3,7 +3,7 @@
 
 /*Блок сдвоенных таймеров DIT*/
 
-#include <module-base.h>
+#include "module-base.h"
 #include <stdint.h>
 
 

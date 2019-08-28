@@ -9,7 +9,7 @@
 #ifndef MODULE_BSP_INCLUDE_MODULE_DMAC_H_
 #define MODULE_BSP_INCLUDE_MODULE_DMAC_H_
 
-#include <module-base.h>
+#include "module-base.h"
 #include <stdint.h>
 
 

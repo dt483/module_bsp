@@ -104,11 +104,6 @@
 #define NM2_LENGTH_32_BIT		( 0x1FFFFUL    )
 
 
-	/* Defining active UART console number */
-#define UART_CONSOLE UART_0
-
-
-
 	/*Common macro defs*/
 #define CONCAT(x, y) x##y
 
@@ -126,22 +121,24 @@
 // then use macro VAR = SET_BIT_FIELD (ADDR ,FIELD);
 
 
-/*TODO: need testing*/
-#define _printf(M, ...) printf(M "\n\r", ##__VA_ARGS__)
+/* Printf replace function for this platform */
+void module_SERIAL_ARM_printf(const char* format,...);
 
-#define _assert(M, ...) printf("[ASSERT] (%s:%d) " M "\n\r",\
+#define _printf(M, ...) printf(M "\r\n", ##__VA_ARGS__)
+
+#define _assert(M, ...) printf("[ASSERT] (%s:%d) " M "\r\n",\
         __FILE__, __LINE__, ##__VA_ARGS__)
 
-#define _runtime_error(M, ...) printf("[ERROR] (%s:%d) " M "\n\r",\
+#define _runtime_error(M, ...) printf("[ERROR] (%s:%d) " M "\r\n",\
         __FILE__, __LINE__, ##__VA_ARGS__)
 
 #ifdef DEBUG
-#define _debug(M, ...) printf("[DEBUG] (%s:%d) " M "\n\r",\
+#define _debug(M, ...) printf("[DEBUG] (%s:%d) " M "\r\n",\
         __FILE__, __LINE__, ##__VA_ARGS__)
 #else
 #define	_debug(M, ...)
 #endif
 
-
+typedef void (*module_2ndLvl_interruptHandler_t)(void);
 
 #endif

@@ -1,10 +1,11 @@
-#include <module-base.h>
-#include <stdint.h>
+
 
 
 #ifndef MODULE_UART_H_
 #define MODULE_UART_H_
 
+#include "module-base.h"
+#include "stdint.h"
 
 typedef enum {  //
 	UART_Speed_1200   = 4255,
@@ -49,13 +50,13 @@ typedef enum {
 
 
 /* -- Регистр разрешения прерываний. IER  DLAB = 0*/
-#define IER_EDSSI	(1 << 2)	/*< Бит, разрешающий прерывание от модема. Если EDSSI установлен                        */
+#define IER_EDSSI	(1 << 3)	/*< Бит, разрешающий прерывание от модема. Если EDSSI установлен                        */
 								/*		в “1”, и если установлены биты [3:0] регистра MSR, то генерируется прерывание   */
 #define IER_ELSI	(1 << 2)	/*< Бит, разрешающий прерывание по состоянию приема. Если ELSI установлен в “1”,        */
 								/*		и если установлены биты [4:1] регистра LSR, то генерируется прерывание          */
-#define IER_ETBEI	(1 << 2)	/*< Бит, разрешающий прерывание по пустоте регистра TFR. Если TBEI установлен в “1”,    */
+#define IER_ETBEI	(1 << 1)	/*< Бит, разрешающий прерывание по пустоте регистра TFR. Если TBEI установлен в “1”,    */
 								/*		и если регистр TFR пуст, то генерируется прерывание                             */
-#define IER_ERBFI	(1 << 2)	/*< Бит, разрешающий прерывание по достижению порога заполнения                         */
+#define IER_ERBFI	(1 << 0)	/*< Бит, разрешающий прерывание по достижению порога заполнения                         */
 								/*		приемного FIFO. Если ERBFI установлен в “1”, и если данные в приемном FIFO      */
 								/*		достигли определенного количества, то генерируется прерывание                   */
 
@@ -89,7 +90,7 @@ typedef enum {
 
 /* -- Регистр управления FIFO. FCR*/
 #define FCR_RCVR_MASK	(0x3)	/*< Пороговый уровень принимающего FIFO:                                 */
-#define FCR_RCVR_OFFS	(6)			/*		00 – 1 байт                                                      */
+#define FCR_RCVR_OFFS	(0x6)		/*		00 – 1 байт                                                      */
 									/*		01 – 4 байт                                                      */
 									/*		10 – 8 байт                                                      */
 									/*		11 – 14 байт                                                     */
@@ -195,9 +196,10 @@ void module_UART_init (	volatile module_UART_controller_t * uartInstance,
 						module_UART_stopBitsNum_t stopBits);
 void module_UART_defaultInit (volatile module_UART_controller_t * uartInstance);
 
-void module_UART_setConsole (volatile module_UART_controller_t * uartInstance);
+
 void module_UART_send (volatile module_UART_controller_t * uartInstance, char data);
-void module_UART_sendConsole (char data);
+int module_UART_recieve (volatile module_UART_controller_t * uartInstance, char * data, int wait_cycles);
+
 void module_UART_clearFIFO (volatile module_UART_controller_t * uartInstance);
 
 #endif /* MODULE_UART_H_*/

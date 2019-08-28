@@ -6,7 +6,7 @@
  */
 
 
-#include <include/module-arm.h>
+#include "module-armcore.h"
 /**
  * 	@brief
  */

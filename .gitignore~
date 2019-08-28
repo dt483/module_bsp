@@ -10,4 +10,3 @@
 #doxygen files:
 *.doxyfile
 *.doxyfile.*
-/Debug/

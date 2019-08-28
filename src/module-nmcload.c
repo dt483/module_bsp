@@ -7,56 +7,54 @@
 
 #include <module-nmcload.h>
 
-
-int module_NMCLOAD_GetBoardDesc(int index, module_NMC_descriptor_t *access)
+void module_NMCLOAD_init(module_NMC_descriptor_t * NMcore1_desc, module_NMC_descriptor_t * NMcore2_desc)
 {
+	NMcore1_desc->boardNumber = 1;
+	NMcore1_desc->flag = 0,
 
-	if((index != 1) && (index != 2)) {
-		return NMCLOAD_ERROR;
-	}
+	NMcore1_desc->localNM_startAddr_NMC = 	NM1B0_START_ADDR_32_BIT;
+	NMcore1_desc->localNM_size_NMC = 		NM1_LENGTH_32_BIT;
+	NMcore1_desc->localNM_startAddr_ARM = 	NM1B0_START_ADDR;
+	NMcore1_desc->localNM_size_ARM = 		NM1_LENGTH;
 
-	access->boardNumber = index;
-	access->flag = 0;
+	NMcore1_desc->sharedNM_startAddr_NMC = 	NM2B0_START_ADDR_32_BIT;
+	NMcore1_desc->sharedNM_size_NMC = 		NM2_LENGTH_32_BIT;
+	NMcore1_desc->sharedNM_startAddr_ARM = 	NM2B0_START_ADDR;
+	NMcore1_desc->sharedNM_size_ARM = 		NM2_LENGTH;
+
+	NMcore1_desc->SM_startAddr_NMC = 		SMB0_START_ADDR_32_BIT;
+	NMcore1_desc->SM_startAddr_ARM = 		SMB0_START_ADDR;
+	NMcore1_desc->SM_size_NMC =				SMB_LENGTH_32_BIT;
+	NMcore1_desc->SM_size_ARM =				SMB_LENGTH;
+
+	NMcore1_desc->AM_startAddr_NMC = 		AMB0_START_ADDR_32_BIT;
+	NMcore1_desc->AM_startAddr_ARM = 		AMB0_START_ADDR;
+	NMcore1_desc->AM_size_NMC =				AMB_LENGTH_32_BIT;
+	NMcore1_desc->AM_size_ARM =				AMB_LENGTH;
 
 
-	switch(index) {
-	case 1:
-		// NM array
-		access->localNM_startAddr_NMC =  NM1B0_START_ADDR_32_BIT;
-		access->localNM_size_NMC = NM1_LENGTH_32_BIT;
-		access->localNM_startAddr_ARM = NM1B0_START_ADDR;
-		access->localNM_size_ARM = NM1_LENGTH;
+	NMcore2_desc->boardNumber = 2;
+	NMcore2_desc->flag = 0;
 
-		access->sharedNM_startAddr_NMC =  NM2B0_START_ADDR_32_BIT;
-		access->sharedNM_size_NMC = NM2_LENGTH_32_BIT;
-		access->sharedNM_startAddr_ARM =  NM2B0_START_ADDR;
-		access->sharedNM_size_ARM = NM2_LENGTH;
+	NMcore2_desc->localNM_startAddr_NMC = 	NM2B0_START_ADDR_32_BIT;
+	NMcore2_desc->localNM_size_NMC = 		NM2_LENGTH_32_BIT;
+	NMcore2_desc->localNM_startAddr_ARM = 	NM2B0_START_ADDR;
+	NMcore2_desc->localNM_size_ARM = 		NM2_LENGTH;
 
-		break;
-	case 2:
-		access->localNM_startAddr_NMC =  NM2B0_START_ADDR_32_BIT;
-		access->localNM_size_NMC = NM2_LENGTH_32_BIT;
-		access->localNM_startAddr_ARM =  NM2B0_START_ADDR;
-		access->localNM_size_ARM = NM2_LENGTH;
+	NMcore2_desc->sharedNM_startAddr_NMC = 	NM1B0_START_ADDR_32_BIT;
+	NMcore2_desc->sharedNM_size_NMC = 		NM1_LENGTH_32_BIT;
+	NMcore2_desc->sharedNM_startAddr_ARM = 	NM1B0_START_ADDR;
+	NMcore2_desc->sharedNM_size_ARM = 		NM1_LENGTH;
 
-		access->sharedNM_startAddr_NMC = NM1B0_START_ADDR_32_BIT;
-		access->sharedNM_size_NMC = NM1_LENGTH_32_BIT;
-		access->sharedNM_startAddr_ARM =  NM1B0_START_ADDR;
-		access->sharedNM_size_ARM = NM1_LENGTH;
-		break;
-}
-	// SM array
-	access->SM_startAddr_NMC = SMB0_START_ADDR_32_BIT;
-	access->SM_startAddr_ARM = SMB0_START_ADDR;
-	access->SM_size_NMC = SMB_LENGTH_32_BIT;
-    access->SM_size_ARM= SMB_LENGTH;
+	NMcore2_desc->SM_startAddr_NMC = 		SMB0_START_ADDR_32_BIT;
+	NMcore2_desc->SM_startAddr_ARM = 		SMB0_START_ADDR;
+	NMcore2_desc->SM_size_NMC =				SMB_LENGTH_32_BIT;
+	NMcore2_desc->SM_size_ARM =				SMB_LENGTH;
 
-	// AM array
-	access->AM_startAddr_NMC =  AMB0_START_ADDR_32_BIT;
-	access->AM_startAddr_ARM =  AMB0_START_ADDR;
-	access->AM_size_NMC = AMB_LENGTH_32_BIT;
-	access->AM_size_ARM = AMB_LENGTH;
-	return NMCLOAD_OK;
+	NMcore2_desc->AM_startAddr_NMC = 		AMB0_START_ADDR_32_BIT;
+	NMcore2_desc->AM_startAddr_ARM = 		AMB0_START_ADDR;
+	NMcore2_desc->AM_size_NMC =				AMB_LENGTH_32_BIT;
+	NMcore2_desc->AM_size_ARM =				AMB_LENGTH;
 }
 
 int module_NMCLOAD_LoadInitCode(module_NMC_descriptor_t * access, uint32_t addrInitFile)
@@ -386,89 +384,49 @@ int module_NMCLOAD_GetStatus(module_NMC_descriptor_t * access, uint32_t * status
 }
 
 
-
-static command_fhandler_t command_handlers[NUMBER_OF_HANDLERS] = {0};
-
-int module_NMCLOAD_linkHandler (int slot, void * f_handler)
+void module_NMCLOAD_getCommandData (module_NMC_descriptor_t * access, module_NMCLOAD_commandBlock_t * local)
 {
-	if ((slot < 0) || (slot > NUMBER_OF_HANDLERS))
-	{
-		_runtime_error ("NMCLOAD: illegal function handler slot number");
-		return NMCLOAD_ERROR;
-	}
-	if (f_handler == 0)
-	{
-		_runtime_error ("NMCLOAD: null pointer function handler");
-		return NMCLOAD_ERROR;
-	}
-	command_handlers[slot] = (command_fhandler_t) f_handler;
-
-#ifdef DEBUG
-		_debug("** CURRENT HANDLER SLOTS STATE **");
-		_debug("NUMBER_OF_HANDLERS = %i", (int ) NUMBER_OF_HANDLERS);
-		int i;
-		for (i = 0; i < NUMBER_OF_HANDLERS; i++)
-		{
-			_debug("SLOT %i :",i);
-			if (command_handlers[i] == 0)
-				_debug("not set");
-			else
-				_debug("setten 0x%p", (uint32_t *) command_handlers[i]);
-		}
-		_debug ("*********************************");
-#endif
-
-
-
-
-	return NMCLOAD_OK;
-}
-
-int dummy_handler (uint32_t bufferAddr, uint32_t bufferLen)
-{
-	_assert("NMCLOD: used dummy handler");
-	return NMCLOAD_OK;
-}
-
-
-void module_NMCLOAD_commandHandler_core1 (void) __attribute__((interrupt ("IRQ")));
-void module_NMCLOAD_commandHandler_core1 (void)
-{
-	/*TODO: добавить поддержку второго ядра*/
-
 	uint32_t * cmdBlckAddr = 0;
-	cmdBlckAddr = (uint32_t *) NMcore1_desc.localNM_startAddr_ARM + CommandToArm;
-	module_NMCLOAD_commandBlock_t * cmdBlck= (module_NMCLOAD_commandBlock_t *) cmdBlckAddr;
+	cmdBlckAddr = (uint32_t *) access->localNM_startAddr_ARM + CommandToArm;
+	module_NMCLOAD_commandBlock_t * cmdBlck = (module_NMCLOAD_commandBlock_t *) cmdBlckAddr;
 
-	// Установка флага занятости обработчика
-	cmdBlck->handlerStatus = 0x1;
+	*local = * ((module_NMCLOAD_commandBlock_t*) cmdBlckAddr);
+
+	uint32_t * bufferAddr_arm;
+	choose_area(access, cmdBlck->bufferAddr,cmdBlck->bufferLen, &bufferAddr_arm, 1);
+
+	local->bufferAddr = (uint32_t) bufferAddr_arm;
+
+
 
 	//2-nd level funvtion handler pointer
-	command_fhandler_t handler = 0;
-	handler = (command_fhandler_t) command_handlers[(int) cmdBlck->commantType];
+	//command_fhandler_t handler = 0;
+	//handler = (command_fhandler_t) command_handlers[(int) cmdBlck->commantType];
 
-	if (handler == 0)
-	{
-		_assert ("NMCLOAD: not found handler for command number %i", cmdBlck->commantType);
-		handler = (command_fhandler_t) dummy_handler;
-	}
+	//if (handler == 0)
+	//{
+	//	_assert ("NMCLOAD: not found handler for command number %i", cmdBlck->commantType);
+	//	handler = (command_fhandler_t) dummy_handler;
+	//}
 
-	int handler_result;
+	//int handler_result;
 	//start handling
-	uint32_t * bufferAddr_arm;
-	choose_area(&NMcore1_desc, cmdBlck->bufferAddr,cmdBlck->bufferLen, &bufferAddr_arm, 1);
-	handler_result = handler ((uint32_t) bufferAddr_arm, cmdBlck->bufferLen);
+	//uint32_t * bufferAddr_arm;
+	//choose_area(&NMcore1_desc, cmdBlck->bufferAddr,cmdBlck->bufferLen, &bufferAddr_arm, 1);
+	//handler_result = handler ((uint32_t) bufferAddr_arm, cmdBlck->bufferLen);
 
-	if (handler_result) _assert ("NMCLOAD: 2-nd lvl handler returned non-zero status");
+	//if (handler_result) _assert ("NMCLOAD: 2-nd lvl handler returned non-zero status");
 
 
 
-	module_ARMSC_clear_NMU_interrupt(ARMSC_INT_NMC0HP);
-	module_VIC_finishHandling();
+	//module_ARMSC_clear_NMU_interrupt(ARMSC_INT_NMC0HP);
+	//module_VIC_finishHandling();
 
-	cmdBlck->handlerStatus = 0x0;
 
-	// Снятие флага занятости обработчика
+	// Снятие флага актуальности данных
+	//cmdBlck->nmRequestStatus = 0x0;
+
+
 
 }
 

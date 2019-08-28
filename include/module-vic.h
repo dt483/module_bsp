@@ -1,8 +1,8 @@
 #ifndef MODULE_VIC_H
 #define MODULE_VIC_H
 
-#include <module-arm.h>
-#include <module-base.h>
+#include "module-armcore.h"
+#include "module-base.h"
 #include <stdint.h>
 
 

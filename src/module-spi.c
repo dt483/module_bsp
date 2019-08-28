@@ -8,7 +8,7 @@
 */
 
  /*TODO: Описать управление прерываниями*/
-#include <include/module-spi.h>
+#include "module-spi.h"
 
 #define SPI_ok 0
 #define SPI_err -1
@@ -27,6 +27,8 @@ static volatile module_SPI_controller_t * const module_SPI_instance = (module_SP
 
 void module_SPI_init()
 {
+	module_SPI_instance->SSPCR1 = 0x0; //disable port
+
 	_debug("SPI: Initialising SPI instance with default values: ");
 	_debug("SPI: \t setting default SSPCR0_SCR  = %u", default_SCR);
 	_debug("SPI: \t setting default SSPCR0_SCR  = %u", default_CPSDVSR);
@@ -38,11 +40,11 @@ void module_SPI_init()
 	 module_SPI_setDataSize (default_datasize);
 
 	 _debug("SPI: \t disabling loopback mode");
-	 module_SPI_setLoopBack( SPI_NORMAL_MODE);
+	// module_SPI_setLoopBack( SPI_NORMAL_MODE);
 
 	 SET_BIT_FIELD(module_SPI_instance->SSPCR0,SSPCR0_FRF, 0x0);
 
-	 module_SPI_instance->SSPCR1 |= SSPCR1_SSE; //disable port
+
 
 	 	 /*ONLY FOR mc7601*/
 		module_GPIO_SetOutput( module_GPIO7);
@@ -134,49 +136,193 @@ int module_SPI_exchangeSingle(uint8_t* TxDataPointer, uint8_t* RxDataPointer)
 {
 	uint8_t dummy;
 	uint32_t pending = 0;
-	while ( ( (module_SPI_instance->SSPSR & SSPSR_BSY) ) && (pending < MAX_PENDING) )
-		pending++;
+	//while ( ( (module_SPI_instance->SSPSR & SSPSR_BSY) ) && (pending < MAX_PENDING) )
+	//	pending++;
 
-	if (pending <= MAX_PENDING)
+	//if (pending <= MAX_PENDING)
 	{
-		pending = 0;
+	//	pending = 0;
 		module_SPI_instance->SSPDR = *TxDataPointer;
-		if ( !(module_SPI_instance->SSPCR1 & SSPCR1_SSE))
-			module_SPI_instance->SSPCR1 |= SSPCR1_SSE; //enable port if non active
-	}
-	else
+	//	if ( !(module_SPI_instance->SSPCR1 & SSPCR1_SSE))
+	//		module_SPI_instance->SSPCR1 |= SSPCR1_SSE; //enable port if non active
+	//}
+	//else
 	{
-		_assert("SPI: port is busy");
-		return SPI_err;
+	//	_assert("SPI: port is busy");
+	//	return SPI_err;
 	}
 	if (RxDataPointer != 0x0)
 	{
 
-		while ( ( (module_SPI_instance->SSPSR & SSPSR_RNE) == 0 ) && (pending < MAX_PENDING) )
-			pending++;
+		//while ( ( (module_SPI_instance->SSPSR & SSPSR_RNE) == 0 ) && (pending < MAX_PENDING) )
+		//	pending++;
 
-		if (pending <= MAX_PENDING)
-		{
-			pending = 0;
+		//if (pending <= MAX_PENDING)
+		//{
+		//	pending = 0;
 			*RxDataPointer = module_SPI_instance->SSPDR;
-		}
-		else
-		{
-			_assert("SPI: slave not send data");
-			return SPI_err;
-		}
+		//}
+		//else
+		//{
+		//	_assert("SPI: slave not send data");
+		//	return SPI_err;
+		//}
 	}
-	else {
-		while ( (module_SPI_instance->SSPSR & SSPSR_RNE) != 0 ) //clean rx fifo
-		{
-			dummy = module_SPI_instance->SSPDR;
-		}
+	//else {
+		//while ( (module_SPI_instance->SSPSR & SSPSR_RNE) != 0 ) //clean rx fifo
+		//{
+		//	dummy = module_SPI_instance->SSPDR;
+		//}
 	}
 
 
-	module_SPI_instance->SSPCR1 |= SSPCR1_SSE; //disable port
+	//module_SPI_instance->SSPCR1 |= SSPCR1_SSE; //disable port
 	return SPI_ok;
 }
+
+void module_SPI_sendMulti (uint8_t* TxDataPointer, uint32_t DataLen)
+{
+	uint32_t pending = 0, currentTxWord = 0, currentRxWord = 0;
+	uint8_t dummy0 = 0,dummy1 = 0xFF;
+
+	while ( ( (module_SPI_instance->SSPSR & SSPSR_BSY) != 0 ) && (pending < MAX_PENDING) )
+	{
+		dummy0 = module_SPI_instance->SSPDR;
+		pending++;
+	}
+
+	if (pending >= MAX_PENDING)
+	{
+		_assert("SPI: port is busy");
+		return; //SPI_err;
+	}
+	else
+	{
+		while ( (module_SPI_instance->SSPSR & SSPSR_RNE) != 0 ) //clean rx fifo
+		{
+			dummy0 = module_SPI_instance->SSPDR;
+		}
+
+		module_SPI_instance->SSPCR1 = 0x0A; //enable port
+		while ((currentTxWord < DataLen) || (currentRxWord < DataLen))
+		{
+
+			while ( ( module_SPI_instance->SSPSR & SSPSR_TNF) && (currentTxWord < DataLen))
+			{
+				if (TxDataPointer == 0)
+				{
+					module_SPI_instance->SSPDR = dummy1 ;
+					currentTxWord++;
+				}
+				else
+					module_SPI_instance->SSPDR = TxDataPointer[currentTxWord++]; //try to store data to tx fifo
+			}
+
+			while  ( (module_SPI_instance->SSPSR & SSPSR_RNE)  )
+			{
+				//if (RxDataPointer == 0)
+				//{
+					dummy0 = module_SPI_instance->SSPDR;
+					currentRxWord++;
+				//}
+				//else
+				//	RxDataPointer[currentRxWord++] = module_SPI_instance->SSPDR;
+			}
+
+		}
+	}
+	module_SPI_instance->SSPCR1 = 0x0; //disable port
+
+	//_printf("SPI: %3i words sent, %3u words recieved",currentTxWord,currentRxWord);
+
+	//return SPI_ok;
+}
+
+/*int module_SPI_readFromFLASH (uint32_t startAddr, uint32_t len, uint8_t* RxDataPointer )
+{
+   typedef struct  {
+    	uint8_t command_id;
+    	uint8_t addr2     ;
+    	uint8_t addr1     ;
+    	uint8_t addr0     ;
+    	uint8_t dummy     ;
+    } fastRead_command_t ;
+
+    fastRead_command_t frc = {
+		0x0B,
+		(startAddr << 16) & (0xFF),
+		(startAddr  << 8) & (0xFF),
+		startAddr & (0xFF),
+		0xFF
+	};
+
+    uint8_t * frc_8 = (uint8_t *) &frc;
+
+    int fr_size = 5;// sizeof(fastRead_command);
+    int fr_sent_bytes = 0, fr_rcv_bytes = 0;
+
+
+	uint32_t DataLen = fr_size + len;
+
+	uint32_t pending = 0, currentTxWord = 0, currentRxWord = 0;
+	uint8_t dummy0 = 0,dummy1 = 0xFF;
+
+	while ( ( (module_SPI_instance->SSPSR & SSPSR_BSY) != 0 ) && (pending < MAX_PENDING) )
+	{
+		dummy0 = module_SPI_instance->SSPDR;
+		pending++;
+	}
+
+	if (pending >= MAX_PENDING)
+	{
+		_assert("SPI: port is busy");
+		return SPI_err;
+	}
+	else
+	{
+		while ( (module_SPI_instance->SSPSR & SSPSR_RNE) != 0 ) //clean rx fifo
+		{
+			dummy0 = module_SPI_instance->SSPDR;
+		}
+
+		module_SPI_instance->SSPCR1 = 0x0A; //enable port
+		while ((currentTxWord < DataLen) || (currentRxWord < DataLen))
+		{
+
+			while ( ( module_SPI_instance->SSPSR & SSPSR_TNF) && (currentTxWord < DataLen))
+			{
+					if (currentTxWord < fr_size)
+					{
+						module_SPI_instance->SSPDR = frc_8[currentTxWord++];
+						fr_sent_bytes++;
+					}
+					else
+					{
+						module_SPI_instance->SSPDR = dummy1 ;
+						currentTxWord++;
+					}
+			}
+
+			while  ( (module_SPI_instance->SSPSR & SSPSR_RNE)  )
+			{
+				if (currentRxWord < fr_size)
+				{
+					dummy0 = module_SPI_instance->SSPDR;
+					currentRxWord++;
+					//fr_rcv_bytes++;
+				}
+				else
+					RxDataPointer[currentRxWord++] = module_SPI_instance->SSPDR;
+			}
+
+		}
+	}
+	module_SPI_instance->SSPCR1 = 0x0; //disable port
+	return SPI_ok;
+
+}
+
+*/
 
 int module_SPI_exchangeMulti (uint8_t* TxDataPointer, uint8_t* RxDataPointer, uint32_t DataLen)
 {
@@ -185,7 +331,6 @@ int module_SPI_exchangeMulti (uint8_t* TxDataPointer, uint8_t* RxDataPointer, ui
 
 	while ( ( (module_SPI_instance->SSPSR & SSPSR_BSY) != 0 ) && (pending < MAX_PENDING) )
 		pending++;
-	module_SPI_instance->SSPCR1 |= SSPCR1_SSE; //disable port
 
 	if (pending >= MAX_PENDING)
 	{
@@ -199,6 +344,8 @@ int module_SPI_exchangeMulti (uint8_t* TxDataPointer, uint8_t* RxDataPointer, ui
 			dummy = module_SPI_instance->SSPDR;
 		}
 
+		module_SPI_instance->SSPCR1 = 0x2; //enable port
+
 		pending = 0;
 		for (currentWord = 0; currentWord < DataLen ;currentWord++)
 		{
@@ -207,8 +354,8 @@ int module_SPI_exchangeMulti (uint8_t* TxDataPointer, uint8_t* RxDataPointer, ui
 			if (pending < MAX_PENDING)
 			{
 				module_SPI_instance->SSPDR = TxDataPointer[currentWord]; //try to store data to tx fifo
-				if ( !(module_SPI_instance->SSPCR1 & SSPCR1_SSE))
-					module_SPI_instance->SSPCR1 |= SSPCR1_SSE; //enable port if non active
+				//if ( !(module_SPI_instance->SSPCR1 & SSPCR1_SSE))
+				//module_SPI_instance->SSPCR1 = 0xA; //enable port if non active
 
 				pending = 0;
 				if (RxDataPointer != 0x0)
@@ -246,9 +393,20 @@ int module_SPI_exchangeMulti (uint8_t* TxDataPointer, uint8_t* RxDataPointer, ui
 
 		}
 	}
-
-	module_SPI_instance->SSPCR1 |= SSPCR1_SSE; //disable port
+	module_SPI_instance->SSPCR1 = 0x0; //disable port
+	//module_SPI_instance->SSPCR1 |= SSPCR1_SSE; //disable port
 	return SPI_ok;
+}
+
+
+void module_SPI_enableCS()
+{
+
+	module_SPI_instance->SSPCR1 = 0x0A; //enable port
+}
+void module_SPI_disableCS()
+{
+	module_SPI_instance->SSPCR1 = 0x0; //disable port
 }
 
 void module_SPI_setDevice( module_SPI_slaveNumber_t dev)

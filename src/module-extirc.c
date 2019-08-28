@@ -5,8 +5,8 @@
  *      Author: aleksey
  */
 
-#include <include/module-extirc.h>
-#include <include/module-vic.h>
+#include "module-extirc.h"
+#include "module-vic.h"
 
 #define EXTIRC_ok 0
 #define EXTIRC_err -1

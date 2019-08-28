@@ -10,7 +10,7 @@
 #define VIC_ok 0
 #define VIC_err -1
 
-#include <include/module-vic.h>
+#include "module-vic.h"
 
 
 static volatile module_VIC_controller_t  * const vicControlRegs = (module_VIC_controller_t *) (VIC_BASE);
@@ -50,13 +50,13 @@ int module_VIC_set_interrupt_handler (module_VIC_INT_NUM_t interruptNumber, void
 			 return VIC_err;
 		} else
 		{
-			module_ARM_irqBlock();
+			//module_ARM_irqBlock();
 			module_VIC_disable_interrupt(interruptNumber);
 			vicHandlers[interruptNumber] = (void*) handlerPointer;
 			_debug("VIC: For interrupt souce No. %u sets handler on 0x%X "
 					,interruptNumber,(int*)handlerPointer);
 			module_VIC_enable_interrupt(interruptNumber);
-			module_ARM_irqUnblock();
+			//module_ARM_irqUnblock();
 			return VIC_ok;
 		}
 	} else return VIC_err;

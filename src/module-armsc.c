@@ -9,7 +9,7 @@
 #define ARMSC_ok 0
 #define ARMSC_err -1
 
-#include <include/module-armsc.h>
+#include "module-armsc.h"
 
 static volatile module_ARMSC_controller_t  * const module_ARMSC_instance = (module_ARMSC_controller_t *) (ARMSC_BASE);
 

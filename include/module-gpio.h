@@ -1,7 +1,7 @@
 #ifndef MODULE_GPIO_H
 #define MODULE_GPIO_H
 
-#include <module-base.h>
+#include "module-base.h"
 #include <stdint.h>
 
  /*TODO: изменить вывод сообщений отладки и ошибок*/
@@ -91,7 +91,7 @@ void module_GPIO_SetOutput( module_GPIO_pin_t gpio );
 void module_GPIO_SetInput( module_GPIO_pin_t gpio );
 void module_GPIO_SetDirection( module_GPIO_pin_t gpio, module_GPIO_direction_t dir );
 
-module_GPIO_value_t module_GPIO_GetGpioValue(module_GPIO_pin_t gpio );
+module_GPIO_value_t module_GPIO_GetValue(module_GPIO_pin_t gpio );
 void module_GPIO_SetHigh( module_GPIO_pin_t gpio );
 void module_GPIO_SetLow( module_GPIO_pin_t gpio );
 void module_GPIO_SetValue( module_GPIO_pin_t gpio, module_GPIO_value_t val );

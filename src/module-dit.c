@@ -1,7 +1,7 @@
 
-#include <include/module-arm.h>
-#include <include/module-dit.h>
-#include <include/module-gpio.h>
+#include "module-armcore.h"
+#include "module-dit.h"
+#include "module-gpio.h"
 #include <stdint.h>
 
 #define DIT_ok 0
@@ -37,6 +37,9 @@ int module_DIT_runFreeCounter(module_DIT_controller_t * timerInstance, module_DI
 }
 int module_DIT_runPeriodicCounter(module_DIT_controller_t * timerInstance, module_DIT_divider_t divider, uint32_t value)
 {
+
+	//timerInstance->Control &= ~(IntEnable);//diasable interrupt
+
 	timerInstance->Control &= ~(TimerEn); // stop timer
 	uint32_t ctrl_temp = timerInstance->Control;
 
@@ -49,6 +52,11 @@ int module_DIT_runPeriodicCounter(module_DIT_controller_t * timerInstance, modul
 	timerInstance->Load = value; //setting start value
 
 	timerInstance->Control = ctrl_temp;
+
+	timerInstance->IntClr = 0xDEADBEEF; //clear interrupt
+
+	//timerInstance->Control |= IntEnable; //enable interrupt
+
 	timerInstance->Control |= TimerEn; // start timer
 	return DIT_ok;
 }
@@ -82,7 +90,7 @@ inline void module_DIT_DisableInterrupt(module_DIT_controller_t * timerInstance)
 
 inline void module_DIT_clearInterrupt(module_DIT_controller_t * timerInstance)
 {
-	timerInstance->IntClr = 0xDEADBEEF;
+	timerInstance->IntClr = 0x1;
 }
 
 
