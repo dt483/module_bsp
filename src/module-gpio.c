@@ -2,30 +2,30 @@
 #include "module-gpio.h"
 
 /*static instances*/
-static volatile module_GPIO_controller_t * const module_GPIO_instance = (module_GPIO_controller_t *) (GPIO_BASE );
+static volatile module_GPIO_controller_t * const module_GPIO_devInstance = (module_GPIO_controller_t *) (GPIO_BASE );
 
  module_GPIO_direction_t  module_GPIO_GetDirection( module_GPIO_pin_t gpio )
 {
 
 	if (gpio < 8)
-		return ( module_GPIO_direction_t )( (module_GPIO_instance->DDR0 & (1 << gpio)) >> gpio);
+		return ( module_GPIO_direction_t )( (module_GPIO_devInstance->DDR0 & (1 << gpio)) >> gpio);
 	else
-		return ( module_GPIO_direction_t )( (module_GPIO_instance->DDR1 & (1 << gpio)) >> gpio);
+		return ( module_GPIO_direction_t )( (module_GPIO_devInstance->DDR1 & (1 << gpio)) >> gpio);
 
 }
 void module_GPIO_SetOutput( module_GPIO_pin_t gpio )
 {
 	if (gpio < 8)
-		module_GPIO_instance->DDR0 |= (1 << gpio);
+		module_GPIO_devInstance->DDR0 |= (1 << gpio);
 	else
-		module_GPIO_instance->DDR1 |= (1 << (gpio-8));
+		module_GPIO_devInstance->DDR1 |= (1 << (gpio-8));
 }
 void module_GPIO_SetInput( module_GPIO_pin_t gpio )
 {
 	if (gpio < 8)
-		module_GPIO_instance->DDR0 &= ~(1 << gpio);
+		module_GPIO_devInstance->DDR0 &= ~(1 << gpio);
 	else
-		module_GPIO_instance->DDR1 &= ~(1 << (gpio-8));
+		module_GPIO_devInstance->DDR1 &= ~(1 << (gpio-8));
 }
 void module_GPIO_SetDirection( module_GPIO_pin_t gpio, module_GPIO_direction_t dir )
 {
@@ -38,18 +38,18 @@ void module_GPIO_SetDirection( module_GPIO_pin_t gpio, module_GPIO_direction_t d
  module_GPIO_value_t module_GPIO_GetValue( module_GPIO_pin_t gpio )
 {
 	if (gpio < 8)
-		return ( module_GPIO_value_t ) ( module_GPIO_instance->PDR0 & (1 << gpio) );
+		return ( module_GPIO_value_t ) ( module_GPIO_devInstance->PDR0 & (1 << gpio) );
 	else
-		return ( module_GPIO_value_t ) ( module_GPIO_instance->PDR1 & (1 << gpio) );
+		return ( module_GPIO_value_t ) ( module_GPIO_devInstance->PDR1 & (1 << gpio) );
 }
 void module_GPIO_SetHigh( module_GPIO_pin_t gpio )
 {
 //	if (module_GPIO_GetDirection(gpio) == module_GPIO_DIRECTION_OUTPUT)
 	{
 		if (gpio < 8)
-			module_GPIO_instance->PDR0 |= (1 << gpio);
+			module_GPIO_devInstance->PDR0 |= (1 << gpio);
 		else
-			module_GPIO_instance->PDR1 |= ((1 << (gpio-8)));
+			module_GPIO_devInstance->PDR1 |= ((1 << (gpio-8)));
 	}
 //	else
 //		_assert("GPIO assert: failed set gpio %i to HIGH, gpio direction is INPUT", gpio);
@@ -59,8 +59,8 @@ void module_GPIO_SetLow( module_GPIO_pin_t gpio )
 {
 //	if (module_GPIO_GetDirection(gpio) == module_GPIO_DIRECTION_OUTPUT)
 	{
-		if (gpio < 8) module_GPIO_instance->PDR0 &= ~(1 << gpio);
-		else module_GPIO_instance->PDR1 &= ~(1 << (gpio-8));
+		if (gpio < 8) module_GPIO_devInstance->PDR0 &= ~(1 << gpio);
+		else module_GPIO_devInstance->PDR1 &= ~(1 << (gpio-8));
 	}
 //	else
 //		_assert("GPIO assert: failed set gpio %i to LOW, gpio direction is INPUT", gpio);
@@ -73,21 +73,12 @@ void module_GPIO_SetValue( module_GPIO_pin_t gpio, module_GPIO_value_t val )
 	if (val == module_GPIO_VALUE_LO)
 		module_GPIO_SetLow(gpio);
 }
-void module_GPIO_toggle( module_GPIO_pin_t gpio)
-{
-//	if (module_GPIO_GetDirection(gpio) == module_GPIO_DIRECTION_OUTPUT)
-	{
-		if (module_GPIO_GetValue(gpio) == module_GPIO_VALUE_HI) module_GPIO_SetLow(gpio);
-		else module_GPIO_SetHigh(gpio);
-	}
-//	else
-//		_assert("GPIO assert: failed toggle gpio %i, gpio direction is INPUT", gpio);
-}
+
 
 void module_GPIO_SPI_setDevice( module_GPIO_SPICS_numDevice_t dev)
 {
-	module_GPIO_instance->DDR3 = 0xF0; //set all CS as input
-	SET_BIT_FIELD(module_GPIO_instance->PDR3, PDR3_SPI, dev);
+	module_GPIO_devInstance->DDR3 = 0xF0; //set all CS as input
+	SET_BIT_FIELD(module_GPIO_devInstance->PDR3, PDR3_SPI, dev);
 }
 
 void module_GPIO_ledOn()

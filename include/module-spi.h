@@ -12,24 +12,18 @@
 #include "module-gpio.h"
 #include <stdint.h>
 
+typedef enum {
+	SPI_RETURN_FAIL = 0,
+	SPI_RETURN_SUCCESS = 1
+}module_SPI_RetCode;
 
-#define module_SPI_NoRecieve (uint8_t*)0x0
 
 /*TODO: системная частота должна определяться блоком CRG11
  * Пока остоавляем по умолчанию 81
  * УТОЧНИТЬ ЧАСТОТЫ*/
 
 typedef  module_GPIO_SPICS_numDevice_t module_SPI_slaveNumber_t;
-/*typedef enum {
-	module_GPIO_SPI_CS0 = 0,
-	module_GPIO_SPI_CS1,
-	module_GPIO_SPI_CS2,
-	module_GPIO_SPI_CS3,
-	module_GPIO_SPI_CS4,
-	module_GPIO_SPI_CS5,
-	module_GPIO_SPI_CS6,
-	module_GPIO_SPI_CS7
-} module_GPIO_SPICS_numDevice_t;*/
+
 
 #define SYSTEM_SPI_FREQUENCY 81920000 //Hz
 
@@ -82,6 +76,29 @@ typedef enum
 	SPI_MODE_3		/*< 	SPI mode 3 (SPO=1, SPH=1)   */
 }  module_SPI_mode_t;
 
+typedef enum
+{
+	SPI_NORMAL_MODE = 0,	/*< 	SPI mode 0 (SPO=0, SPH=0)   */
+	SPI_LOOPBACK_MODE		/*< 	SPI mode 1 (SPO=0, SPH=1)   */
+}  module_SPI_loopBack_t;
+
+typedef enum
+{
+	SPI_DMA_disabled = 0,	/*< 	SPI mode 0 (SPO=0, SPH=0)   */
+	SPI_TxDMA_enabled = 1,
+	SPI_RxDMA_enabled = 2,
+}  module_SPI_DMAstatus_t;
+
+typedef struct {
+	uint32_t scr_div;
+	uint32_t cps_div;
+	module_SPI_mode_t mode;
+	module_SPI_datasize_t datasize;
+	module_SPI_slaveNumber_t slave_number;
+	module_SPI_DMAstatus_t dma_status;
+} module_SPI_config_t;
+
+
 
 /* -- Регистр управления. SSPCR1 */
 #define SSPCR1_SOD		(1 << 3	)   /*< Slave-mode output disable. Бит используется только при работе      */
@@ -93,11 +110,6 @@ typedef enum
 									/*	0 – нормальный режим функционирования порта                        */
 									/*		1 – выходы передающего сдвигового регистра соединены с входами */
 									/*		принимающего сдвигового регистра                               */
-typedef enum
-{
-	SPI_NORMAL_MODE = 0,	/*< 	SPI mode 0 (SPO=0, SPH=0)   */
-	SPI_LOOPBACK_MODE		/*< 	SPI mode 1 (SPO=0, SPH=1)   */
-}  module_SPI_loopBack_t;
 
 
 /* -- Регистр состояния. SSPSR*/
@@ -148,33 +160,20 @@ typedef enum
 /* -- Регистр управления DMA. SSPDMACR */
 #define SSPDMACR_TXDMAE	(1 << 1)	/*< Если бит установлен в 1, то DMA-доступ к передающему FIFO разрешен.*/
 #define SSPDMACR_RXDMAE	(1 << 0)	/*< Если бит установлен в 1, то DMA-доступ к принимающему FIFO разрешен */
-typedef enum
-{
-	SPI_TxDMA_enabled = 0,	/*< 	SPI mode 0 (SPO=0, SPH=0)   */
-	SPI_TxDMA_disabled = 1,
-	SPI_RxDMA_enabled = 2,
-	SPI_RxDMA_disabled = 3	/*< 	SPI mode 1 (SPO=0, SPH=1)   */
-}  module_SPI_DMAstatus_t;
-
 
 
 
 
 /*Function prototypes*/
 // void module_GPIO_SPI_setDevice( module_GPIO_SPICS_numDevice_t dev); <- from module-gpio.hm
-void module_SPI_init();
-int module_SPI_setDividers(uint32_t scr, uint32_t cpsdvsr);
-uint32_t module_SPI_getFrequency();
-int module_SPI_setMode (module_SPI_mode_t mode);
-int module_SPI_setDataSize (module_SPI_datasize_t datasize);
-int module_SPI_exchangeSingle(uint8_t* TxDataPointer, uint8_t* RxDataPointer);
-int module_SPI_exchangeMulti (uint8_t* TxDataPointer, uint8_t* RxDataPointer, uint32_t DataLen);
-void module_SPI_sendMulti (uint8_t* TxDataPointer, uint32_t DataLen);
+
+module_SPI_RetCode module_SPI_setConfig (module_SPI_config_t * config);
+
+module_SPI_RetCode module_SPI_trancieve (uint8_t * txDataPointer, uint8_t * rxDataPointer, uint32_t DataLen);
+
 void module_SPI_setLoopBack(module_SPI_loopBack_t lbm);
-void module_SPI_setDevice( module_SPI_slaveNumber_t dev);
-void module_SPI_enableCS();
-void module_SPI_disableCS();
-int module_SPI_setDmaStatus(module_SPI_DMAstatus_t dmaSt);
+
+uint32_t module_SPI_getFrequency();
 
 //int module_SPI_readFromFLASH (uint32_t startAddr, uint32_t len, uint8_t* RxDataPointer );
 

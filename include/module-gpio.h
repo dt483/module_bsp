@@ -4,7 +4,6 @@
 #include "module-base.h"
 #include <stdint.h>
 
- /*TODO: изменить вывод сообщений отладки и ошибок*/
 
 typedef struct {
 	uint32_t	PDR0;	/*Регистр порта данных 0/               */
@@ -17,15 +16,6 @@ typedef struct {
 	uint32_t	DDR3;	/*Регистр направления передачи данных 3 */
 } module_GPIO_controller_t;
 
-//#define PDR0  (GPIO_BASE + 0x00)
-//#define PDR1  (GPIO_BASE + 0x04)
-//#define PDR2  (GPIO_BASE + 0x08)
-//#define PDR3  (GPIO_BASE + 0x0C)
-//
-//#define DDR0  (GPIO_BASE + 0x10)
-//#define DDR1  (GPIO_BASE + 0x14)
-//#define DDR2  (GPIO_BASE + 0x18)
-//#define DDR3  (GPIO_BASE + 0x1C)
 
 
 #define LED0_GPIO        module_GPIO0
@@ -95,7 +85,6 @@ module_GPIO_value_t module_GPIO_GetValue(module_GPIO_pin_t gpio );
 void module_GPIO_SetHigh( module_GPIO_pin_t gpio );
 void module_GPIO_SetLow( module_GPIO_pin_t gpio );
 void module_GPIO_SetValue( module_GPIO_pin_t gpio, module_GPIO_value_t val );
-void module_GPIO_toggle( module_GPIO_pin_t gpio);
 
 
 void module_GPIO_SPI_setDevice( module_GPIO_SPICS_numDevice_t dev);

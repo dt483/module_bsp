@@ -7,6 +7,11 @@
 
 
 
+typedef enum {
+	VIC_RETURN_FAIL = 0,
+	VIC_RETURN_SUCCESS = 1
+}module_VIC_RetCode;
+
 
 
 //#define VICADDRESS-c -fmessage-length=0 -ffixed-r8 -march=armv6zk  -mtune=arm1176jzf-s		( VIC_BASE + 0xF00 )/*Адрес процедуры обработки для текущего IRQ прерывания*/

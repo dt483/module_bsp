@@ -7,10 +7,9 @@
 
 /*TODO: настройка приоритетов прерыванйи*/
 
-#define VIC_ok 0
-#define VIC_err -1
-
 #include "module-vic.h"
+
+
 
 
 static volatile module_VIC_controller_t  * const vicControlRegs = (module_VIC_controller_t *) (VIC_BASE);
@@ -25,9 +24,9 @@ static int check_int_number(module_VIC_INT_NUM_t interruptNumber)
 	if ( (interruptNumber > 31) | (interruptNumber < 0))
 	{
 		_runtime_error("VIC: illegal interrupt number");
-		return VIC_err;
+		return VIC_RETURN_FAIL;
 	}
-	return VIC_ok;
+	return VIC_RETURN_SUCCESS;
 }
 static int check_int_priority(module_VIC_INT_NUM_t interruptNumber)
 {
@@ -35,19 +34,19 @@ static int check_int_priority(module_VIC_INT_NUM_t interruptNumber)
 	if ( (interruptNumber > 31) | (interruptNumber < 0))
 	{
 		_runtime_error("VIC: illegal interrupt number");
-		return VIC_err;
+		return VIC_RETURN_FAIL;
 	}
-	return VIC_ok;
+	return VIC_RETURN_SUCCESS;
 }
 
 int module_VIC_set_interrupt_handler (module_VIC_INT_NUM_t interruptNumber, void* handlerPointer)
 {
-	if (check_int_number(interruptNumber) == VIC_ok)
+	if (check_int_number(interruptNumber) == VIC_RETURN_SUCCESS)
 	{
 		if (handlerPointer == 0)
 		{
 			_runtime_error("VIC: illegal handler pointer");
-			 return VIC_err;
+			 return VIC_RETURN_FAIL;
 		} else
 		{
 			//module_ARM_irqBlock();
@@ -57,9 +56,9 @@ int module_VIC_set_interrupt_handler (module_VIC_INT_NUM_t interruptNumber, void
 					,interruptNumber,(int*)handlerPointer);
 			module_VIC_enable_interrupt(interruptNumber);
 			//module_ARM_irqUnblock();
-			return VIC_ok;
+			return VIC_RETURN_SUCCESS;
 		}
-	} else return VIC_err;
+	} else return VIC_RETURN_FAIL;
 }
 
 /*int module_VIC_set_interrupt_priority (module_VIC_INT_NUM_t interruptNumber, void* handlerPointer)
@@ -76,21 +75,21 @@ int module_VIC_set_interrupt_handler (module_VIC_INT_NUM_t interruptNumber, void
 			_debug("VIC: For interrupt souce No. %i sets handler on 0x%X ",interruptNumber,(int*)handlerPointer);
 			return VIC_ok;
 		}
-	} else return VIC_err;
+	} else return VIC_RETURN_FAIL;
 }*/
 
 
 int module_VIC_get_RAW_interrupt_status (module_VIC_INT_NUM_t interruptNumber)
 {
-	if (check_int_number(interruptNumber) == VIC_ok)
+	if (check_int_number(interruptNumber) == VIC_RETURN_SUCCESS)
 	{
 		return ((vicControlRegs->VICRAWINTR) & (1UL << interruptNumber)) >> interruptNumber;
-	} else return VIC_err;
+	} else return VIC_RETURN_FAIL;
 }
 
 module_VIC_INT_STATUS_t module_VIC_get_interrupt_status (module_VIC_INT_NUM_t interruptNumber)
 {
-	if (check_int_number(interruptNumber) == VIC_ok)
+	if (check_int_number(interruptNumber) == VIC_RETURN_SUCCESS)
 	{
 		uint32_t mask = 1UL << interruptNumber;
 		if (vicControlRegs->VICINTSELECT & mask) //IRQ ? FIQ
@@ -103,14 +102,14 @@ module_VIC_INT_STATUS_t module_VIC_get_interrupt_status (module_VIC_INT_NUM_t in
 			if ((vicControlRegs->VICFIQSTATUS & mask) != 0) return IRQ_ACTIVE;
 			else return IRQ_NON_ACTIVE;
 		}
-	} else return VIC_err;
+	} else return VIC_RETURN_FAIL;
 
 }
 
 
 int module_VIC_set_interrupt_type (module_VIC_INT_NUM_t interruptNumber, module_VIC_INT_TYPE_t type)
 {
-	if (check_int_number(interruptNumber) == VIC_ok)
+	if (check_int_number(interruptNumber) == VIC_RETURN_SUCCESS)
 	{
 		uint32_t mask = 1UL << interruptNumber;
 		if (type == FIQ)
@@ -123,50 +122,50 @@ int module_VIC_set_interrupt_type (module_VIC_INT_NUM_t interruptNumber, module_
 			 mask = ~mask;
 			 vicControlRegs->VICINTSELECT &= mask;
 		}
-		return VIC_ok;
+		return VIC_RETURN_SUCCESS;
 	}
-	else return VIC_err;
+	else return VIC_RETURN_FAIL;
 }
 
 
 int module_VIC_enable_interrupt (module_VIC_INT_NUM_t interruptNumber)
 {
-	if (check_int_number(interruptNumber) == VIC_ok)
+	if (check_int_number(interruptNumber) == VIC_RETURN_SUCCESS)
 	{
 		vicControlRegs->VICINTENABLE |= 1UL << interruptNumber;
-		return VIC_ok;
+		return VIC_RETURN_SUCCESS;
 	}
-	else return VIC_err;
+	else return VIC_RETURN_FAIL;
 }
 
 int module_VIC_disable_interrupt (module_VIC_INT_NUM_t interruptNumber)
 {
-	if (check_int_number(interruptNumber) == VIC_ok)
+	if (check_int_number(interruptNumber) == VIC_RETURN_SUCCESS)
 	{
 		vicControlRegs->VICINTENCLEAR |= 1UL << interruptNumber;
-		return VIC_ok;
+		return VIC_RETURN_SUCCESS;
 	}
-	else return VIC_err;
+	else return VIC_RETURN_FAIL;
 }
 
 int module_VIC_invoke_soft_interrupt (module_VIC_INT_NUM_t interruptNumber)
 {
-	if (check_int_number(interruptNumber) == VIC_ok)
+	if (check_int_number(interruptNumber) == VIC_RETURN_SUCCESS)
 	{
 		vicControlRegs->VICSOFTINT |= 1UL << interruptNumber;
-		return VIC_ok;
+		return VIC_RETURN_SUCCESS;
 	}
-	else return VIC_err;
+	else return VIC_RETURN_FAIL;
 }
 
 int module_VIC_clear_soft_interrupt (module_VIC_INT_NUM_t interruptNumber)
 {
-	if (check_int_number(interruptNumber) == VIC_ok)
+	if (check_int_number(interruptNumber) == VIC_RETURN_SUCCESS)
 	{
 		vicControlRegs->VICSOFTINTCLEAR |= 1UL << interruptNumber;
-		return VIC_ok;
+		return VIC_RETURN_SUCCESS;
 	}
-	else return VIC_err;
+	else return VIC_RETURN_FAIL;
 }
 
 void module_VIC_finishHandling ()

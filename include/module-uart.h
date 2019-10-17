@@ -7,25 +7,37 @@
 #include "module-base.h"
 #include "stdint.h"
 
+typedef enum {
+	UART_RETURN_FAIL = 0,
+	UART_RETURN_SUCCESS = 1
+}module_UART_RetCode;
+
+
+typedef enum {
+	UART_0 = 0,
+	UART_1 = 1
+}module_UART_number_t;
+
+
 typedef enum {  //
-	UART_Speed_1200   = 4255,
-	UART_Speed_2400   = 2133,
-	UART_Speed_4800   = 1066,
-	UART_Speed_9600   = 532,
-	UART_Speed_14400  = 355,
-	UART_Speed_19200  = 266,
-	UART_Speed_28800  = 178,
-	UART_Speed_38400  = 134,
-	UART_Speed_57600  = 89,
-	UART_Speed_76800  = 66,
-	UART_Speed_115200 = 44,
-	UART_Speed_230400 = 22,
-	UART_Speed_460800 = 11,
-	UART_Speed_921600 = 6,
-	UART_Speed_1382400= 4,
-	UART_Speed_2764800= 2,
-	UART_Speed_5529600= 1,
-} module_UART_speedDivider_t;
+	UART_Baud_1200   = 4255,
+	UART_Baud_2400   = 2133,
+	UART_Baud_4800   = 1066,
+	UART_Baud_9600   = 532,
+	UART_Baud_14400  = 355,
+	UART_Baud_19200  = 266,
+	UART_Baud_28800  = 178,
+	UART_Baud_38400  = 134,
+	UART_Baud_57600  = 89,
+	UART_Baud_76800  = 66,
+	UART_Baud_115200 = 44,
+	UART_Baud_230400 = 22,
+	UART_Baud_460800 = 11,
+	UART_Baud_921600 = 6,
+	UART_Baud_1382400= 4,
+	UART_Baud_2764800= 2,
+	UART_Baud_5529600= 1,
+} module_UART_baudRate_t;
 
 typedef struct {
 	uint32_t RFR_TFR_DLL;	/*< Регистр принимающего FIFO. DLAB=0 [чтение]                                   */
@@ -44,9 +56,30 @@ typedef struct {
 } module_UART_controller_t;
 
 typedef enum {
-    UART_0 = 0,
-    UART_1 = 1
-} module_UART_uartNum_t;
+	UART_wordLength_5bit = 0,
+	UART_wordLength_6bit = 1,
+	UART_wordLength_7bit = 2,
+	UART_wordLength_8bit = 3
+} module_UART_wordLength_t;
+
+typedef enum {
+	UART_Parity_NoControl = 0,
+	UART_Parity_OddControl = 1,
+	UART_Parity_EvenControl = 2,
+} module_UART_evenParity_t;
+
+typedef enum  {
+	UART_StopBits_1 = 0,
+	UART_StopBits_2 = 1
+} module_UART_stopBitsNum_t;
+
+typedef struct {
+	module_UART_baudRate_t baudRate;
+	module_UART_wordLength_t wordLength;
+	module_UART_evenParity_t parity;
+	module_UART_stopBitsNum_t stopBits;
+} module_UART_config_t;
+
 
 
 /* -- Регистр разрешения прерываний. IER  DLAB = 0*/
@@ -131,23 +164,6 @@ typedef enum {
 #define LCR_WLS_MASK	(0x3)		/*< Выбор длины передаваемого/принимаемого слова                            */
 #define LCR_WLS_OFFS	(0)			/*		00 – 5 бит   01 – 6 бит   10 – 7 бит   11 – 8 бит                   */
 
-typedef enum {
-	UART_wordLength_5bit = 0,
-	UART_wordLength_6bit = 1,
-	UART_wordLength_7bit = 2,
-	UART_wordLength_8bit = 3
-} module_UART_wordLength_t;
-
-typedef enum {
-	UART_Parity_NoControl = 0,
-	UART_Parity_OddControl = 1,
-	UART_Parity_EvenControl = 2,
-} module_UART_evenParity_t;
-
-typedef enum  {
-	UART_StopBits_1 = 0,
-	UART_StopBits_2 = 1
-} module_UART_stopBitsNum_t;
 
 
 /*Формат регистра LSR*/
@@ -187,19 +203,15 @@ typedef enum  {
 /*Формат регистра MCR*/
 #define MCR_LOOP (1 << 4) /*< Кольцевой режим (режим самопроверки).                   */
 
-module_UART_controller_t* module_UART_getInstance(module_UART_uartNum_t num);
 
-void module_UART_init (	volatile module_UART_controller_t * uartInstance,
-						module_UART_speedDivider_t speedDivider,
-						module_UART_wordLength_t wordLength,
-						module_UART_evenParity_t parity,
-						module_UART_stopBitsNum_t stopBits);
-void module_UART_defaultInit (volatile module_UART_controller_t * uartInstance);
+/* Function prototypes*/
 
+void module_UART_setConfig ( module_UART_number_t uartN, module_UART_config_t * config);
 
-void module_UART_send (volatile module_UART_controller_t * uartInstance, char data);
-int module_UART_recieve (volatile module_UART_controller_t * uartInstance, char * data, int wait_cycles);
+void module_UART_send (module_UART_number_t uartN, char data);
 
-void module_UART_clearFIFO (volatile module_UART_controller_t * uartInstance);
+module_UART_RetCode module_UART_recieve (module_UART_number_t uartN, char * data, int wait_cycles);
+
+void module_UART_clearFIFO (module_UART_number_t uartN);
 
 #endif /* MODULE_UART_H_*/
